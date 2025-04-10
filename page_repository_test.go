@@ -29,9 +29,11 @@ func TestPageRepositoryInsert(t *testing.T) {
 		Url:             "https://example.com/12345",
 		RefUrl:          "https://example.com",
 		Tags:            "tag1,tag2",
+		Translated:      true,
+		Published:       true,
 	}
 
-	pr.Insert(page)
+	pr.Insert(&page)
 
 	pages := pr.FindByDate("2025-01-01")
 
@@ -49,7 +51,9 @@ func TestPageRepositoryInsert(t *testing.T) {
 		created.Slug != page.Slug ||
 		created.Url != page.Url ||
 		created.RefUrl != page.RefUrl ||
-		created.Tags != page.Tags {
+		created.Tags != page.Tags ||
+		created.Translated != page.Translated ||
+		created.Published != page.Published {
 		t.Fatalf("Expected %v, got %v", page, created)
 	}
 }
@@ -77,11 +81,11 @@ func TestPageRepositoryUpdate(t *testing.T) {
 		RefUrl:          "https://example.com",
 		Tags:            "tag1,tag2",
 	}
-	pr.Insert(page)
+	pr.Insert(&page)
 
 	// Update the page
 	updatedPage := Page{
-		Id:              1,
+		Id:              page.Id,
 		ExtId:           "54321",
 		Date:            "2025-01-02",
 		Html:            "<html>Updated</html>",
@@ -91,6 +95,8 @@ func TestPageRepositoryUpdate(t *testing.T) {
 		Url:             "https://example.com/54321",
 		RefUrl:          "https://example-updated.com",
 		Tags:            "tag3,tag4",
+		Translated:      true,
+		Published:       true,
 	}
 	pr.Update(updatedPage)
 
@@ -109,7 +115,9 @@ func TestPageRepositoryUpdate(t *testing.T) {
 		updated.Slug != updatedPage.Slug ||
 		updated.Url != updatedPage.Url ||
 		updated.RefUrl != updatedPage.RefUrl ||
-		updated.Tags != updatedPage.Tags {
+		updated.Tags != updatedPage.Tags ||
+		updated.Translated != updatedPage.Translated ||
+		updated.Published != updatedPage.Published {
 		t.Fatalf("Expected %v, got %v", updatedPage, updated)
 	}
 }
