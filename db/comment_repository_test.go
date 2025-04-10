@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"database/sql"
@@ -134,7 +134,7 @@ func initTest(t *testing.T) (*os.File, *sql.DB) {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 
-	db := getDbConnection(file.Name())
+	db := GetDbConnection(file.Name())
 
 	return file, db
 }

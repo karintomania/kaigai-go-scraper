@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"os"
@@ -14,7 +14,7 @@ func TestLinkRepositoryInsert(t *testing.T) {
 
 	defer os.Remove(file.Name())
 
-	db := getDbConnection(file.Name())
+	db := GetDbConnection(file.Name())
 
 	lr := NewLinkRepository(db)
 
@@ -54,7 +54,7 @@ func TestLinkRepositoryFindByIdReturnNothing(t *testing.T) {
 	}
 	defer os.Remove(file.Name())
 
-	db := getDbConnection(file.Name())
+	db := GetDbConnection(file.Name())
 
 	lr := NewLinkRepository(db)
 
