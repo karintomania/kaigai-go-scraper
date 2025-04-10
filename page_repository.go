@@ -19,10 +19,12 @@ type Page struct {
 	Url             string
 	RefUrl          string
 	Tags            string // comma separated tags
+	Translated      bool
+	Published       bool
 }
 
 func (r *PageRepository) Update(page Page) {
-	cmd := `UPDATE pages SET ext_id = ?, date = ?, html = ?, title = ?, translated_title = ?, slug = ?, url = ?, ref_url = ?, tags = ? WHERE id = ?`
+	cmd := `UPDATE pages SET ext_id = ?, date = ?, html = ?, title = ?, translated_title = ?, slug = ?, url = ?, ref_url = ?, tags = ?, translated = ?, published = ? WHERE id = ?`
 
 	_, err := r.db.Exec(cmd,
 		page.ExtId,
@@ -34,6 +36,8 @@ func (r *PageRepository) Update(page Page) {
 		page.Url,
 		page.RefUrl,
 		page.Tags,
+		page.Translated,
+		page.Published,
 		page.Id)
 
 	if err != nil {
@@ -49,23 +53,33 @@ func NewPageRepository(db *sql.DB) *PageRepository {
 	return &PageRepository{db: db}
 }
 
-func (r *PageRepository) Insert(Page Page) {
-	cmd := `INSERT INTO pages (ext_id, date, html, title, translated_title, slug, url, ref_url, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+func (r *PageRepository) Insert(page *Page) {
+	cmd := `INSERT INTO pages (ext_id, date, html, title, translated_title, slug, url, ref_url, tags, translated, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(cmd,
-		Page.ExtId,
-		Page.Date,
-		Page.Html,
-		Page.Title,
-		Page.TranslatedTitle,
-		Page.Slug,
-		Page.Url,
-		Page.RefUrl,
-		Page.Tags)
+	result, err := r.db.Exec(cmd,
+		page.ExtId,
+		page.Date,
+		page.Html,
+		page.Title,
+		page.TranslatedTitle,
+		page.Slug,
+		page.Url,
+		page.RefUrl,
+		page.Tags,
+		page.Translated,
+		page.Published)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	id, err := result.LastInsertId()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	page.Id = int(id)
 }
 
 func (r *PageRepository) FindByDate(date string) []Page {
@@ -94,7 +108,9 @@ func (r *PageRepository) FindByDate(date string) []Page {
 			&Page.Slug,
 			&Page.Url,
 			&Page.RefUrl,
-			&Page.Tags)
+			&Page.Tags,
+			&Page.Translated,
+			&Page.Published)
 
 		if err != nil {
 			log.Fatalln(err)
@@ -118,7 +134,9 @@ func (r *PageRepository) CreatePagesTable() {
 			slug STRING,
 			url STRING NOT NULL UNIQUE,
 			ref_url STRING,
-			tags STRING
+			tags STRING,
+translated BOOLEAN NOT NULL DEFAULT 0,
+published BOOLEAN NOT NULL DEFAULT 0
 	)`
 
 	_, err := r.db.Exec(cmd)

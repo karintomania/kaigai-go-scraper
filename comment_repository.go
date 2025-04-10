@@ -19,10 +19,11 @@ type Comment struct {
 	Reply             string
 	Colour            string
 	Score             int
+	Translated        bool
 }
 
 func (r *CommentRepository) Update(comment Comment) {
-	cmd := `UPDATE Comments SET ext_comment_id = ?, page_id = ?, user_name = ?, content = ?, translated_content = ?, indent = ?, reply = ?, colour = ?, score = ? WHERE id = ?`
+	cmd := `UPDATE Comments SET ext_comment_id = ?, page_id = ?, user_name = ?, content = ?, translated_content = ?, indent = ?, reply = ?, colour = ?, score = ?, translated = ? WHERE id = ?`
 
 	_, err := r.db.Exec(cmd,
 		comment.ExtCommentId,
@@ -34,6 +35,7 @@ func (r *CommentRepository) Update(comment Comment) {
 		comment.Reply,
 		comment.Colour,
 		comment.Score,
+		comment.Translated,
 		comment.Id)
 
 	if err != nil {
@@ -49,10 +51,10 @@ func NewCommentRepository(db *sql.DB) *CommentRepository {
 	return &CommentRepository{db: db}
 }
 
-func (r *CommentRepository) Insert(comment Comment) {
-	cmd := `INSERT INTO Comments (ext_comment_id, page_id, user_name, content, translated_content, indent, reply, colour, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+func (r *CommentRepository) Insert(comment *Comment) {
+	cmd := `INSERT INTO Comments (ext_comment_id, page_id, user_name, content, translated_content, indent, reply, colour, score, translated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(cmd,
+	result, err := r.db.Exec(cmd,
 		comment.ExtCommentId,
 		comment.PageId,
 		comment.UserName,
@@ -61,11 +63,20 @@ func (r *CommentRepository) Insert(comment Comment) {
 		comment.Indent,
 		comment.Reply,
 		comment.Colour,
-		comment.Score)
+		comment.Score,
+		comment.Translated)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	id, err := result.LastInsertId()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	comment.Id = int(id)
 }
 
 func (r *CommentRepository) FindByPageId(pageId int) []Comment {
@@ -94,7 +105,8 @@ func (r *CommentRepository) FindByPageId(pageId int) []Comment {
 			&comment.Indent,
 			&comment.Reply,
 			&comment.Colour,
-			&comment.Score)
+			&comment.Score,
+			&comment.Translated)
 
 		if err != nil {
 			log.Fatalln(err)
@@ -117,7 +129,8 @@ translated_content STRING,
 indent STRING,
 reply STRING,
 colour STRING,
-score INTEGER
+score INTEGER,
+translated BOOLEAN NOT NULL DEFAULT 0
 	)`
 
 	_, err := r.db.Exec(cmd)
