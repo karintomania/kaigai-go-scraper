@@ -1,25 +1,13 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-
+	"github.com/karintomania/kaigai-go-scraper/app"
+	"github.com/karintomania/kaigai-go-scraper/cmd"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const file string = "./db.sql"
-
 func main() {
-	fmt.Print("hello !")
-}
+	cmd.Migrate("./db.sql")
 
-func getDbConnection(path string) *sql.DB {
-	db, err := sql.Open("sqlite3", path)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return db
+	app.Scrape()
 }

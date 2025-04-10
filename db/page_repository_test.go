@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"os"
@@ -13,7 +13,7 @@ func TestPageRepositoryInsert(t *testing.T) {
 	}
 	defer os.Remove(file.Name())
 
-	db := getDbConnection(file.Name())
+	db := GetDbConnection(file.Name())
 
 	pr := NewPageRepository(db)
 
@@ -65,7 +65,7 @@ func TestPageRepositoryUpdate(t *testing.T) {
 	}
 	defer os.Remove(file.Name())
 
-	db := getDbConnection(file.Name())
+	db := GetDbConnection(file.Name())
 	pr := NewPageRepository(db)
 	pr.CreatePagesTable()
 
@@ -129,7 +129,7 @@ func TestPageRepositoryFindByDateReturnNothing(t *testing.T) {
 	}
 	defer os.Remove(file.Name())
 
-	db := getDbConnection(file.Name())
+	db := GetDbConnection(file.Name())
 
 	pr := NewPageRepository(db)
 
