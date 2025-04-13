@@ -1,9 +1,12 @@
 package cmd
 
-import "github.com/karintomania/kaigai-go-scraper/db"
+import (
+	"github.com/karintomania/kaigai-go-scraper/common"
+	"github.com/karintomania/kaigai-go-scraper/db"
+)
 
-func Migrate(file string) {
-	dbConn := db.GetDbConnection(file)
+func Migrate(config common.Config) {
+	dbConn := db.GetDbConnection(config["db_path"])
 	defer dbConn.Close()
 
 	lr := db.NewLinkRepository(dbConn)

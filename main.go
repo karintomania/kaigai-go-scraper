@@ -7,7 +7,18 @@ import (
 )
 
 func main() {
-	cmd.Migrate("./db.sql")
+	migrate := false
+	scrape := true
 
-	app.Scrape()
+	config := map[string]string{
+		"db_path": "./db.sql",
+	}
+
+	if migrate {
+		cmd.Migrate(config)
+	}
+
+	if scrape {
+		app.Scrape(config)
+	}
 }

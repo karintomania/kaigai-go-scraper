@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/karintomania/kaigai-go-scraper/repositories"
+	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
 func TestGetTopLinks(t *testing.T) {
@@ -16,7 +16,7 @@ func TestGetTopLinks(t *testing.T) {
 		{Id: "5", Points: 100, LinkText: "Link 5", Link: "http://link5.com", Dead: false},
 	}
 
-	expected := []repositories.Link{
+	expected := []db.Link{
 		{ExtId: "2", Date: "2025-04-01", URL: "http://link2.com", Title: "Link 2", Scraped: false},
 		{ExtId: "4", Date: "2025-04-01", URL: "http://link4.com", Title: "Link 4", Scraped: false},
 		{ExtId: "1", Date: "2025-04-01", URL: "http://link1.com", Title: "Link 1", Scraped: false},

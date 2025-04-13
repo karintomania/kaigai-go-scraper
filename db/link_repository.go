@@ -17,6 +17,14 @@ type Link struct {
 	Scraped bool
 }
 
+func (r *LinkRepository) Update(link *Link) {
+	cmd := "UPDATE links SET ext_id = ?, date = ?, url = ?, title = ?, scraped = ? WHERE id = ?"
+	_, err := r.db.Exec(cmd, link.ExtId, link.Date, link.URL, link.Title, link.Scraped, link.Id)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
 type LinkRepository struct {
 	db *sql.DB
 }
@@ -44,7 +52,7 @@ func (r *LinkRepository) Insert(link *Link) {
 }
 
 func (r *LinkRepository) FindByDate(date string) []Link {
-	query := "SELECT * FROM links WHERE date = ?"
+	query := "SELECT * FROM links WHERE date = ? AND scraped = 0"
 
 	rows, err := r.db.Query(query, date)
 
