@@ -15,8 +15,8 @@ type Comment struct {
 	UserName          string
 	Content           string
 	TranslatedContent string
-	Indent            string
-	Reply             string
+	Indent            int
+	Reply             int
 	Colour            string
 	Score             int
 	Translated        bool

@@ -5,7 +5,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
@@ -13,6 +16,7 @@ func scrapeHtml(
 	dateString string,
 	linkRepository *db.LinkRepository,
 	pageRepository *db.PageRepository,
+	commentRepository *db.CommentRepository,
 ) error {
 	links := linkRepository.FindByDate(dateString)
 
@@ -31,7 +35,12 @@ func scrapeHtml(
 	pages := pageRepository.FindByDate(dateString)
 
 	for _, page := range pages {
-		page, comments := getPageAndComments(&page)
+		_, comments := getPageAndComments(&page)
+		pageRepository.Update(&page)
+
+		for _, comment := range comments {
+			commentRepository.Insert(&comment)
+		}
 	}
 
 	return nil
@@ -82,5 +91,43 @@ func downloadHtml(link *db.Link, dateString string, pageRepository *db.PageRepos
 // scrape info from the HTML
 // update page and return comments
 func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
-	return page, make([]db.Comment, 0)
+	fmt.Println("test")
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(page.Html))
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	comments := make([]db.Comment, 0)
+
+	doc.Find("tr.athing.comtr").Each(func (i int, s *goquery.Selection) {
+
+		replyStr := s.Find(".clicky").AttrOr("nn", "22")
+
+		reply, err := strconv.Atoi(replyStr)
+		fmt.Printf("reply: %v, replyStr %s\n", reply, replyStr)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		indent, err := strconv.Atoi(s.Find("td.ind").AttrOr("indent", "0"))
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		comment := db.Comment{
+			ExtCommentId: s.AttrOr("id", ""),
+			PageId:       page.Id,
+			UserName:     s.Find("a.hnuser").Text(),
+			Content:      strings.TrimSpace(s.Find(".commtext").Text()),
+			Indent:       indent,
+			Reply:        reply,
+		}
+
+		fmt.Printf("comment: %v\n", comment)
+		comments  = append(comments, comment)
+		
+	})
+
+	return page, comments
 }

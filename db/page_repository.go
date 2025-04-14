@@ -23,7 +23,7 @@ type Page struct {
 	Published       bool
 }
 
-func (r *PageRepository) Update(page Page) {
+func (r *PageRepository) Update(page *Page) {
 	cmd := `UPDATE pages SET ext_id = ?, date = ?, html = ?, title = ?, translated_title = ?, slug = ?, url = ?, ref_url = ?, tags = ?, translated = ?, published = ? WHERE id = ?`
 
 	_, err := r.db.Exec(cmd,

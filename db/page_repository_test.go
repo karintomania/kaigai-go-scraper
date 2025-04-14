@@ -84,7 +84,7 @@ func TestPageRepositoryUpdate(t *testing.T) {
 	pr.Insert(&page)
 
 	// Update the page
-	updatedPage := Page{
+	updatedPage := &Page{
 		Id:              page.Id,
 		ExtId:           "54321",
 		Date:            "2025-01-02",
