@@ -17,17 +17,27 @@ func scrapeHtml(
 	links := linkRepository.FindByDate(dateString)
 
 	for _, link := range links {
-		if err := storeHtml(link, dateString, pageRepository); err != nil {
+
+		if err := downloadHtml(&link, dateString, pageRepository); err != nil {
 			return err
 		}
+
+		// mark link as scraped
 		link.Scraped = true
 		linkRepository.Update(&link)
+
+	}
+
+	pages := pageRepository.FindByDate(dateString)
+
+	for _, page := range pages {
+		page, comments := getPageAndComments(&page)
 	}
 
 	return nil
 }
 
-func storeHtml(link db.Link, dateString string, pageRepository *db.PageRepository) error {
+func downloadHtml(link *db.Link, dateString string, pageRepository *db.PageRepository) error {
 	url := "https://news.ycombinator.com/item?id=" + link.ExtId
 
 	httpClient := &http.Client{}
@@ -67,4 +77,10 @@ func storeHtml(link db.Link, dateString string, pageRepository *db.PageRepositor
 	pageRepository.Insert(&page)
 
 	return nil
+}
+
+// scrape info from the HTML
+// update page and return comments
+func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
+	return page, make([]db.Comment, 0)
 }

@@ -10,7 +10,6 @@ import (
 const file string = "./db.sql"
 
 func Scrape(config common.Config) {
-
 	dbConn := db.GetDbConnection(config["db_path"])
 	defer dbConn.Close()
 
