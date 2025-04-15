@@ -36,6 +36,7 @@ func StoreLinks(dateString string, linkRepository *db.LinkRepository) error {
 
 	for _, link := range links {
 		linkRepository.Insert(&link)
+		fmt.Printf("Inserted link: %s\n", link.URL)
 	}
 
 	return nil

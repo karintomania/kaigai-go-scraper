@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/anaskhan96/soup"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
@@ -93,16 +92,10 @@ func downloadHtml(link *db.Link, dateString string, pageRepository *db.PageRepos
 // scrape info from the HTML
 // update page and return comments
 func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
-	docS := soup.HTMLParse(page.Html)
+	// set slug for the page
+	page.Slug = getSlug(page.Title)
 
-	coms := docS.FindAllStrict("tr", "class", "athing comtr")
-
-	for _, com := range coms {
-	}
-
-
-
-
+	// create parser
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(page.Html))
 
 	if err != nil {
@@ -111,41 +104,46 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 
 	comments := make([]db.Comment, 0)
 
+	// loop all comments
 	doc.Find("tr.athing.comtr").Each(func (i int, s *goquery.Selection) {
-		// because a tag is in a invalid place, get reply by regex
-		html, err := s.Html()
+		// get reply
+		reply, err := strconv.Atoi(s.Find("a.clicky.togg").AttrOr("n", "0"))
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		re := regexp.MustCompile(`n="(\d+)"`)
-		fmt.Printf("html: %v\n", html)
-		replyStr := re.FindString(html)
-		fmt.Printf("reply: %v\n", replyStr)
-		// reply, err := strconv.Atoi(replyStr)
-		// fmt.Printf("reply: %v, replyStr %s\n", reply, replyStr)
-		// if exist {
-		// 	log.Fatalln("doesnt exist")
-		// }
-
+		// get indent
 		indent, err := strconv.Atoi(s.Find("td.ind").AttrOr("indent", "0"))
 		if err != nil {
 			log.Fatalln(err)
 		}
 
+		// create comment struct
 		comment := db.Comment{
 			ExtCommentId: s.AttrOr("id", ""),
 			PageId:       page.Id,
 			UserName:     s.Find("a.hnuser").Text(),
 			Content:      strings.TrimSpace(s.Find(".commtext").Text()),
 			Indent:       indent,
-			Reply:        0,
+			Reply:        reply,
 		}
 
-		fmt.Printf("comment: %v\n", comment)
 		comments  = append(comments, comment)
-		
 	})
 
 	return page, comments
+}
+
+func getSlug(str string) string {
+	lower := strings.ToLower(str)
+
+	re := regexp.MustCompile("[a-z0-9]+")
+
+	maxWordCount := 8
+
+	// get min(all, maxWordCount) words for slug
+	words := re.FindAllString(lower, maxWordCount)
+
+	return strings.Join(words, "_")
+	
 }
