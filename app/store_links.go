@@ -3,11 +3,10 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"sort"
-	"strings"
 
 	"github.com/karintomania/kaigai-go-scraper/db"
+	"github.com/karintomania/kaigai-go-scraper/external"
 )
 
 type JsonLink struct {
@@ -43,27 +42,11 @@ func StoreLinks(dateString string, linkRepository *db.LinkRepository) error {
 }
 
 func callHckrNewsApi(date string) ([]JsonLink, error) {
-	date = strings.Replace(date, "-", "", -1)
-	url := fmt.Sprintf("https://hckrnews.com/data/%s.js", date)
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("api call failed. status code: %d", resp.StatusCode)
-	}
+	body := external.CallHckrNews(date)
+	defer body.Close()
 
 	var links []JsonLink
-	if err := json.NewDecoder(resp.Body).Decode(&links); err != nil {
+	if err := json.NewDecoder(body).Decode(&links); err != nil {
 		return nil, err
 	}
 

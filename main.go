@@ -7,8 +7,10 @@ import (
 )
 
 func main() {
-	migrate := false
-	scrape := true
+	migrate := true
+	scrape := false
+
+	date := "2025-04-02"
 
 	config := map[string]string{
 		"db_path": "./db.sql",
@@ -19,6 +21,6 @@ func main() {
 	}
 
 	if scrape {
-		app.Scrape(config)
+		app.Scrape(date, config)
 	}
 }

@@ -10,10 +10,12 @@ func Migrate(config common.Config) {
 	defer dbConn.Close()
 
 	lr := db.NewLinkRepository(dbConn)
-	cr := db.NewCommentRepository(dbConn)
-	pr := db.NewPageRepository(dbConn)
-
 	lr.CreateLinksTable()
+
+	cr := db.NewCommentRepository(dbConn)
 	cr.CreateCommentsTable()
+
+	pr := db.NewPageRepository(dbConn)
 	pr.CreatePagesTable()
+
 }

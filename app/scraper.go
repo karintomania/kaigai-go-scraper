@@ -9,7 +9,7 @@ import (
 
 const file string = "./db.sql"
 
-func Scrape(config common.Config) {
+func Scrape(date string, config common.Config) {
 	dbConn := db.GetDbConnection(config["db_path"])
 	defer dbConn.Close()
 
@@ -17,16 +17,15 @@ func Scrape(config common.Config) {
 	pageRepository := db.NewPageRepository(dbConn)
 	commentRepository := db.NewCommentRepository(dbConn)
 
-	// if err := StoreLinks("2025-04-01", linkRepository); err != nil {
+	// if err := StoreLinks(date, linkRepository); err != nil {
 	// 	log.Fatalf("Error storing links: %v", err)
 	// }
 
 	if err := scrapeHtml(
-		"2025-04-01",
+		date,
 		linkRepository,
 		pageRepository,
 		commentRepository); err != nil {
 		log.Fatalf("Error scraping HTML: %v", err)
 	}
-
 }

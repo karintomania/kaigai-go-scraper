@@ -4,14 +4,19 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
+	"log/slog"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/karintomania/kaigai-go-scraper/db"
+	"github.com/karintomania/kaigai-go-scraper/external"
 )
+
+const MAX_COMMENT_NUM = 100
 
 func scrapeHtml(
 	dateString string,
@@ -19,19 +24,10 @@ func scrapeHtml(
 	pageRepository *db.PageRepository,
 	commentRepository *db.CommentRepository,
 ) error {
-	links := linkRepository.FindByDate(dateString)
 
-	for _, link := range links {
-
-		if err := downloadHtml(&link, dateString, pageRepository); err != nil {
-			return err
-		}
-
-		// mark link as scraped
-		link.Scraped = true
-		linkRepository.Update(&link)
-
-	}
+	// if err := downloadHtmlsAsync(dateString, linkRepository, pageRepository); err != nil {
+	// 	return err
+	// }
 
 	pages := pageRepository.FindByDate(dateString)
 
@@ -47,30 +43,56 @@ func scrapeHtml(
 	return nil
 }
 
+func downloadHtmlsAsync(
+	dateString string,
+	linkRepository *db.LinkRepository,
+	pageRepository *db.PageRepository,
+) error {
+	links := linkRepository.FindByDate(dateString)
+
+	var wg sync.WaitGroup
+	var errEncountered error
+	var errMutex sync.Mutex
+
+	for _, link := range links {
+		wg.Add(1)
+		time.Sleep(1 * time.Second)
+		go func(link *db.Link) {
+			if err := downloadHtml(link, dateString, pageRepository); err != nil {
+				slog.Error("Error happend while downloading HTML", slog.String("url", link.URL), slog.Any("err", err))
+
+				errMutex.Lock()
+				errEncountered = err
+				errMutex.Unlock()
+				return
+			}
+
+			// mark link as scraped
+			link.Scraped = true
+			linkRepository.Update(link)
+
+			slog.Info("HTML downloaded",slog.String("title", link.Title), slog.Int("link id", link.Id))
+
+			wg.Done()
+		}(&link)
+	}
+	wg.Wait()
+
+	if errEncountered != nil {
+		return fmt.Errorf("error downloading HTML, %w", errEncountered)
+	}
+
+	return nil
+}
+
+
+
 func downloadHtml(link *db.Link, dateString string, pageRepository *db.PageRepository) error {
-	url := "https://news.ycombinator.com/item?id=" + link.ExtId
+	url, body := external.CallHackerNews(link)
 
-	httpClient := &http.Client{}
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	htmlBytes, err := io.ReadAll(body)
 	if err != nil {
-		log.Fatalln(err)
-	}
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("error on scraping %s. Http Status %s", url, resp.Status)
-	}
-
-	htmlBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("error on reading response from %s, %w", url, err)
+		return fmt.Errorf("error on reading response from %s: %w", url,  err)
 	}
 
 	html := string(htmlBytes)
@@ -106,6 +128,9 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 
 	// loop all comments
 	doc.Find("tr.athing.comtr").Each(func (i int, s *goquery.Selection) {
+		if i > MAX_COMMENT_NUM {
+			return
+		}
 		// get reply
 		reply, err := strconv.Atoi(s.Find("a.clicky.togg").AttrOr("n", "0"))
 		if err != nil {

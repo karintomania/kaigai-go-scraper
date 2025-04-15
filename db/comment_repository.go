@@ -23,7 +23,7 @@ type Comment struct {
 }
 
 func (r *CommentRepository) Update(comment Comment) {
-	cmd := `UPDATE Comments SET ext_comment_id = ?, page_id = ?, user_name = ?, content = ?, translated_content = ?, indent = ?, reply = ?, colour = ?, score = ?, translated = ? WHERE id = ?`
+	cmd := `UPDATE comments SET ext_comment_id = ?, page_id = ?, user_name = ?, content = ?, translated_content = ?, indent = ?, reply = ?, colour = ?, score = ?, translated = ? WHERE id = ?`
 
 	_, err := r.db.Exec(cmd,
 		comment.ExtCommentId,
@@ -52,7 +52,7 @@ func NewCommentRepository(db *sql.DB) *CommentRepository {
 }
 
 func (r *CommentRepository) Insert(comment *Comment) {
-	cmd := `INSERT INTO Comments (ext_comment_id, page_id, user_name, content, translated_content, indent, reply, colour, score, translated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	cmd := `INSERT INTO comments (ext_comment_id, page_id, user_name, content, translated_content, indent, reply, colour, score, translated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.db.Exec(cmd,
 		comment.ExtCommentId,
@@ -80,7 +80,7 @@ func (r *CommentRepository) Insert(comment *Comment) {
 }
 
 func (r *CommentRepository) FindByPageId(pageId int) []Comment {
-	query := "SELECT * FROM Comments WHERE page_id = ?"
+	query := "SELECT * FROM comments WHERE page_id = ?"
 
 	rows, err := r.db.Query(query, pageId)
 
@@ -119,7 +119,7 @@ func (r *CommentRepository) FindByPageId(pageId int) []Comment {
 }
 
 func (r *CommentRepository) CreateCommentsTable() {
-	cmd := `CREATE TABLE IF NOT EXISTS Comments(
+	cmd := `CREATE TABLE IF NOT EXISTS comments(
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 ext_comment_id STRING NOT NULL,
 page_id INTEGER NOT NULL,
@@ -141,7 +141,7 @@ translated BOOLEAN NOT NULL DEFAULT 0
 }
 
 func (r *CommentRepository) DropCommentsTable() {
-	cmd := "DROP TABLE IF EXISTS Comments"
+	cmd := "DROP TABLE IF EXISTS comments"
 
 	_, err := r.db.Exec(cmd)
 
