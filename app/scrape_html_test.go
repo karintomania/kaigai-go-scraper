@@ -18,7 +18,7 @@ func TestScrapeHtml(t *testing.T) {
             <table>
                 <tr class="athing comtr" id="123">
                     <td class="ind" indent="0"></td>
-                    <a class="togg clicky" nn="100"></a>
+                    <a class="togg clicky" n="100"></a>
                     <td>
                         <a class="hnuser">user1</a>
                         <span class="age" title="2025-02-07T06:23:36 1738909416">

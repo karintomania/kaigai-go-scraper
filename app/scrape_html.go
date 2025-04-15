@@ -5,9 +5,11 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/anaskhan96/soup"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
@@ -91,7 +93,16 @@ func downloadHtml(link *db.Link, dateString string, pageRepository *db.PageRepos
 // scrape info from the HTML
 // update page and return comments
 func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
-	fmt.Println("test")
+	docS := soup.HTMLParse(page.Html)
+
+	coms := docS.FindAllStrict("tr", "class", "athing comtr")
+
+	for _, com := range coms {
+	}
+
+
+
+
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(page.Html))
 
 	if err != nil {
@@ -101,14 +112,21 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 	comments := make([]db.Comment, 0)
 
 	doc.Find("tr.athing.comtr").Each(func (i int, s *goquery.Selection) {
-
-		replyStr := s.Find(".clicky").AttrOr("nn", "22")
-
-		reply, err := strconv.Atoi(replyStr)
-		fmt.Printf("reply: %v, replyStr %s\n", reply, replyStr)
+		// because a tag is in a invalid place, get reply by regex
+		html, err := s.Html()
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		re := regexp.MustCompile(`n="(\d+)"`)
+		fmt.Printf("html: %v\n", html)
+		replyStr := re.FindString(html)
+		fmt.Printf("reply: %v\n", replyStr)
+		// reply, err := strconv.Atoi(replyStr)
+		// fmt.Printf("reply: %v, replyStr %s\n", reply, replyStr)
+		// if exist {
+		// 	log.Fatalln("doesnt exist")
+		// }
 
 		indent, err := strconv.Atoi(s.Find("td.ind").AttrOr("indent", "0"))
 		if err != nil {
@@ -121,7 +139,7 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 			UserName:     s.Find("a.hnuser").Text(),
 			Content:      strings.TrimSpace(s.Find(".commtext").Text()),
 			Indent:       indent,
-			Reply:        reply,
+			Reply:        0,
 		}
 
 		fmt.Printf("comment: %v\n", comment)
