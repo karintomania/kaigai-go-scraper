@@ -1,1 +1,4 @@
 *.sql
+
+*.env
+!.example.env

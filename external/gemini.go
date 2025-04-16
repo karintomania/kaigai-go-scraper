@@ -33,10 +33,10 @@ func (gr *GeminiResponse) GetText() string {
 	return gr.Candidates[0].Content.Parts[0].Text
 }
 
-func CallGemini(prompt string, cfg common.Config) string {
+func CallGemini(prompt string) string {
 
 	// data, _ := os.ReadFile("./external/sample_responses/gemini.json")
-	data := geminiHttpCall(prompt, cfg)
+	data := geminiHttpCall(prompt)
 
 	var gr GeminiResponse
 
@@ -49,11 +49,11 @@ func CallGemini(prompt string, cfg common.Config) string {
 	return answer
 }
 
-func geminiHttpCall(prompt string, cfg common.Config) []byte {
+func geminiHttpCall(prompt string) []byte {
 	url := fmt.Sprintf(
-		cfg["gemini_url"],
-		cfg["gemini_model"],
-		cfg["gemini_api_key"],
+		common.GetEnv("gemini_url"),
+		common.GetEnv("gemini_model"),
+		common.GetEnv("gemini_api_key"),
 		)
 
 	body := []byte(fmt.Sprintf(`{

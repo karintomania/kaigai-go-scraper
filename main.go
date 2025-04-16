@@ -7,20 +7,16 @@ import (
 )
 
 func main() {
-	migrate := true
+	migrate := false
 	scrape := false
 
 	date := "2025-04-02"
 
-	config := map[string]string{
-		"db_path": "./db.sql",
-	}
-
 	if migrate {
-		cmd.Migrate(config)
+		cmd.Migrate()
 	}
 
 	if scrape {
-		app.Scrape(date, config)
+		app.Scrape(date)
 	}
 }

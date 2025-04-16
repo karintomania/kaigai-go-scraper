@@ -9,8 +9,8 @@ import (
 
 const file string = "./db.sql"
 
-func Scrape(date string, config common.Config) {
-	dbConn := db.GetDbConnection(config["db_path"])
+func Scrape(date string) {
+	dbConn := db.GetDbConnection(common.GetEnv("db_path"))
 	defer dbConn.Close()
 
 	linkRepository := db.NewLinkRepository(dbConn)

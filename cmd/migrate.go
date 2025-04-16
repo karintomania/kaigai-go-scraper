@@ -5,8 +5,8 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
-func Migrate(config common.Config) {
-	dbConn := db.GetDbConnection(config["db_path"])
+func Migrate() {
+	dbConn := db.GetDbConnection(common.GetEnv("db_path"))
 	defer dbConn.Close()
 
 	lr := db.NewLinkRepository(dbConn)
