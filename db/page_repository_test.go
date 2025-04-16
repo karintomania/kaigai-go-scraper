@@ -14,6 +14,7 @@ func TestPageRepositoryInsert(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	db := GetDbConnection(file.Name())
+	defer db.Close()
 
 	pr := NewPageRepository(db)
 
@@ -66,6 +67,8 @@ func TestPageRepositoryUpdate(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	db := GetDbConnection(file.Name())
+	defer db.Close()
+
 	pr := NewPageRepository(db)
 	pr.CreatePagesTable()
 
@@ -130,6 +133,7 @@ func TestPageRepositoryFindByDateReturnNothing(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	db := GetDbConnection(file.Name())
+	defer db.Close()
 
 	pr := NewPageRepository(db)
 

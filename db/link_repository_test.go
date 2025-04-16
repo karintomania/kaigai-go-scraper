@@ -15,6 +15,7 @@ func TestLinkRepositoryInsert(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	db := GetDbConnection(file.Name())
+	defer db.Close()
 
 	lr := NewLinkRepository(db)
 
@@ -55,6 +56,7 @@ func TestLinkRepositoryFindByIdReturnNothing(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	db := GetDbConnection(file.Name())
+	defer db.Close()
 
 	lr := NewLinkRepository(db)
 

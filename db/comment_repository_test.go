@@ -9,6 +9,7 @@ import (
 func TestCommentRepositoryInsert(t *testing.T) {
 	file, db := initTest(t)
 
+	defer db.Close()
 	defer os.Remove(file.Name())
 
 	cr := NewCommentRepository(db)
@@ -55,6 +56,7 @@ func TestCommentRepositoryInsert(t *testing.T) {
 func TestCommentRepositoryFindByPageIdReturnNothing(t *testing.T) {
 	file, db := initTest(t)
 
+	defer db.Close()
 	defer os.Remove(file.Name())
 
 	cr := NewCommentRepository(db)
@@ -71,6 +73,7 @@ func TestCommentRepositoryFindByPageIdReturnNothing(t *testing.T) {
 func TestCommentRepositoryUpdate(t *testing.T) {
 	file, db := initTest(t)
 
+	defer db.Close()
 	defer os.Remove(file.Name())
 
 	cr := NewCommentRepository(db)
