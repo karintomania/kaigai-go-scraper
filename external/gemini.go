@@ -13,7 +13,7 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/common"
 )
 
-type GeminiResponse struct {
+type geminiResponse struct {
 	Candidates []struct {
 		Content struct {
 			Parts []struct {
@@ -24,7 +24,7 @@ type GeminiResponse struct {
 	ModelVersion string `json:"modelVersion"`
 }
 
-func (gr *GeminiResponse) GetText() string {
+func (gr *geminiResponse) getText() string {
 	if len(gr.Candidates) == 0 ||
 	len(gr.Candidates[0].Content.Parts) == 0 {
 		log.Panicf("Invalid gemini response: %v", gr)
@@ -38,13 +38,13 @@ func CallGemini(prompt string) string {
 	// data, _ := os.ReadFile("./external/sample_responses/gemini.json")
 	data := geminiHttpCall(prompt)
 
-	var gr GeminiResponse
+	var gr geminiResponse
 
 	if err := json.Unmarshal(data, &gr); err != nil {
 		log.Fatalln(err)
 	}
 
-	answer := gr.GetText()
+	answer := gr.getText()
 
 	return answer
 }
@@ -75,8 +75,7 @@ func geminiHttpCall(prompt string) []byte {
 		panic(err)
 	}
 
-	// TODO: reuse http client
-	client := &http.Client{}
+	client := getHttpClient()
 
 	resp, err := client.Do(req)
 	if err != nil {

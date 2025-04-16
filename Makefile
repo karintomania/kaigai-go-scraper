@@ -2,9 +2,9 @@
 
 test:
 	$(eval COMMAND := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS)))
-	if [ "$(COMMAND)" ]; then \
-		godotenv -f ./.env.testing go test ./$(COMMAND); \
+	@if [ "$(COMMAND)" ]; then \
+		godotenv -f ./.testing.env go test ./$(COMMAND); \
 	else \
-		godotenv -f ./.env.testing go test ./... -v; \
+		godotenv -f ./.testing.env go test ./... -v; \
 	fi
 

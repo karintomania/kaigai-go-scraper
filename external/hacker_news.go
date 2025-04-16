@@ -14,7 +14,7 @@ import (
 func CallHackerNews(link *db.Link) (string, io.ReadCloser) {
 	url := "https://news.ycombinator.com/item?id=" + link.ExtId
 
-	httpClient := &http.Client{}
+	httpClient := getHttpClient()
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -42,7 +42,7 @@ func CallHckrNews(date string) io.ReadCloser {
 		log.Fatalln(err)
 	}
 
-	client := &http.Client{}
+	client := getHttpClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalln(err)
