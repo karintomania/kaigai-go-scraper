@@ -71,7 +71,7 @@ func downloadHtmlsAsync(
 			link.Scraped = true
 			linkRepository.Update(link)
 
-			slog.Info("HTML downloaded",slog.String("title", link.Title), slog.Int("link id", link.Id))
+			slog.Info("HTML downloaded", slog.String("title", link.Title), slog.Int("link id", link.Id))
 
 			wg.Done()
 		}(&link)
@@ -85,14 +85,12 @@ func downloadHtmlsAsync(
 	return nil
 }
 
-
-
 func downloadHtml(link *db.Link, dateString string, pageRepository *db.PageRepository) error {
 	url, body := external.CallHackerNews(link)
 
 	htmlBytes, err := io.ReadAll(body)
 	if err != nil {
-		return fmt.Errorf("error on reading response from %s: %w", url,  err)
+		return fmt.Errorf("error on reading response from %s: %w", url, err)
 	}
 
 	html := string(htmlBytes)
@@ -127,7 +125,7 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 	comments := make([]db.Comment, 0)
 
 	// loop all comments
-	doc.Find("tr.athing.comtr").Each(func (i int, s *goquery.Selection) {
+	doc.Find("tr.athing.comtr").Each(func(i int, s *goquery.Selection) {
 		if i > MAX_COMMENT_NUM {
 			return
 		}
@@ -153,7 +151,7 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 			Reply:        reply,
 		}
 
-		comments  = append(comments, comment)
+		comments = append(comments, comment)
 	})
 
 	return page, comments
@@ -170,5 +168,5 @@ func getSlug(str string) string {
 	words := re.FindAllString(lower, maxWordCount)
 
 	return strings.Join(words, "_")
-	
+
 }

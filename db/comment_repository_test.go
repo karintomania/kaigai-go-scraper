@@ -5,7 +5,7 @@ import (
 )
 
 func TestCommentRepositoryInsert(t *testing.T) {
-	db, cleanup:= getTestEmptyDbConnection()
+	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	cr := NewCommentRepository(db)
@@ -50,7 +50,7 @@ func TestCommentRepositoryInsert(t *testing.T) {
 }
 
 func TestCommentRepositoryFindByPageIdReturnNothing(t *testing.T) {
-	db, cleanup:= getTestEmptyDbConnection()
+	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	cr := NewCommentRepository(db)
@@ -65,7 +65,7 @@ func TestCommentRepositoryFindByPageIdReturnNothing(t *testing.T) {
 }
 
 func TestCommentRepositoryUpdate(t *testing.T) {
-	db, cleanup:= getTestEmptyDbConnection()
+	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	cr := NewCommentRepository(db)

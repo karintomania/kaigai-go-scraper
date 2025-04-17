@@ -5,7 +5,7 @@ import (
 )
 
 func TestPageRepositoryInsert(t *testing.T) {
-	db, cleanup:= getTestEmptyDbConnection()
+	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	pr := NewPageRepository(db)
@@ -52,7 +52,7 @@ func TestPageRepositoryInsert(t *testing.T) {
 }
 
 func TestPageRepositoryUpdate(t *testing.T) {
-	db, cleanup:= getTestEmptyDbConnection()
+	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	pr := NewPageRepository(db)
@@ -112,7 +112,7 @@ func TestPageRepositoryUpdate(t *testing.T) {
 }
 
 func TestPageRepositoryFindByDateReturnNothing(t *testing.T) {
-	db, cleanup:= getTestEmptyDbConnection()
+	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	pr := NewPageRepository(db)

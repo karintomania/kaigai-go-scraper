@@ -26,7 +26,7 @@ type geminiResponse struct {
 
 func (gr *geminiResponse) getText() string {
 	if len(gr.Candidates) == 0 ||
-	len(gr.Candidates[0].Content.Parts) == 0 {
+		len(gr.Candidates[0].Content.Parts) == 0 {
 		log.Panicf("Invalid gemini response: %v", gr)
 	}
 
@@ -52,7 +52,7 @@ func geminiHttpCall(prompt string) []byte {
 		common.GetEnv("gemini_url"),
 		common.GetEnv("gemini_model"),
 		common.GetEnv("gemini_api_key"),
-		)
+	)
 
 	body := fmt.Appendf([]byte(`{"contents": [
 {"parts": [{"text": "%s"}]}

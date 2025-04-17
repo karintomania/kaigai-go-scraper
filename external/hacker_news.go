@@ -10,7 +10,6 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
-
 func CallHackerNews(link *db.Link) (string, io.ReadCloser) {
 	url := "https://news.ycombinator.com/item?id=" + link.ExtId
 

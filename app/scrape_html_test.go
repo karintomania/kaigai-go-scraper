@@ -53,7 +53,7 @@ func TestScrapeHtml(t *testing.T) {
 	if want, got := "test_title_which_is_made_way_too_long", page.Slug; want != got {
 		t.Errorf("expected slug to be %s, but got %s", want, got)
 	}
-	
+
 	for i, want := range []db.Comment{
 		{
 			ExtCommentId: "123",

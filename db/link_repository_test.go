@@ -5,7 +5,7 @@ import (
 )
 
 func TestLinkRepositoryInsert(t *testing.T) {
-	db, cleanup:= getTestEmptyDbConnection()
+	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	lr := NewLinkRepository(db)
@@ -40,7 +40,7 @@ func TestLinkRepositoryInsert(t *testing.T) {
 }
 
 func TestLinkRepositoryFindByIdReturnNothing(t *testing.T) {
-	db, cleanup:= getTestEmptyDbConnection()
+	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	lr := NewLinkRepository(db)

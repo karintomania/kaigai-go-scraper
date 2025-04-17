@@ -1,4 +1,4 @@
-.PHONY: test
+.PHONY: test fmt
 
 test:
 	$(eval COMMAND := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS)))
@@ -8,3 +8,6 @@ test:
 		godotenv -f ./.testing.env go test ./... -v; \
 	fi
 
+fmt:
+	go fmt ./...
+	golangci-lint run
