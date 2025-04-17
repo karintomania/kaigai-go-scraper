@@ -34,8 +34,6 @@ func (gr *geminiResponse) getText() string {
 }
 
 func CallGemini(prompt string) string {
-
-	// data, _ := os.ReadFile("./external/sample_responses/gemini.json")
 	data := geminiHttpCall(prompt)
 
 	var gr geminiResponse
@@ -56,17 +54,9 @@ func geminiHttpCall(prompt string) []byte {
 		common.GetEnv("gemini_api_key"),
 		)
 
-	body := []byte(fmt.Sprintf(`{
-    "contents": [
-      {
-        "parts": [
-          {
-            "text": "%s"
-          }
-        ]
-      }
-    ]
-}`, prompt))
+	body := fmt.Appendf([]byte(`{"contents": [
+{"parts": [{"text": "%s"}]}
+]}`), prompt)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 

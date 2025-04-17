@@ -1,25 +1,16 @@
 package db
 
 import (
-	"os"
 	"testing"
 )
 
 func TestLinkRepositoryInsert(t *testing.T) {
-	file, err := os.CreateTemp("", "LinkRepository.sql")
-
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-
-	defer os.Remove(file.Name())
-
-	db := GetDbConnection(file.Name())
-	defer db.Close()
+	db, cleanup:= getTestEmptyDbConnection()
+	defer cleanup()
 
 	lr := NewLinkRepository(db)
 
-	lr.CreateLinksTable()
+	lr.CreateTable()
 
 	link := Link{
 		ExtId:   "12345",
@@ -49,18 +40,12 @@ func TestLinkRepositoryInsert(t *testing.T) {
 }
 
 func TestLinkRepositoryFindByIdReturnNothing(t *testing.T) {
-	file, err := os.CreateTemp("", "LinkRepository.sql")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(file.Name())
-
-	db := GetDbConnection(file.Name())
-	defer db.Close()
+	db, cleanup:= getTestEmptyDbConnection()
+	defer cleanup()
 
 	lr := NewLinkRepository(db)
 
-	lr.CreateLinksTable()
+	lr.CreateTable()
 
 	links := lr.FindByDate("2025-01-01")
 

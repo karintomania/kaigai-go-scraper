@@ -13,7 +13,7 @@ func main() {
 	date := "2025-04-02"
 
 	if migrate {
-		cmd.Migrate()
+		cmd.MigrateCmd()
 	}
 
 	if scrape {

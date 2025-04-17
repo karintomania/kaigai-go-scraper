@@ -80,7 +80,7 @@ func (r *LinkRepository) FindByDate(date string) []Link {
 
 }
 
-func (r *LinkRepository) CreateLinksTable() {
+func (r *LinkRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS links(
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			ext_id STRING NOT NULL,

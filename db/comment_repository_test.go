@@ -1,20 +1,16 @@
 package db
 
 import (
-	"database/sql"
-	"os"
 	"testing"
 )
 
 func TestCommentRepositoryInsert(t *testing.T) {
-	file, db := initTest(t)
-
-	defer db.Close()
-	defer os.Remove(file.Name())
+	db, cleanup:= getTestEmptyDbConnection()
+	defer cleanup()
 
 	cr := NewCommentRepository(db)
 
-	cr.CreateCommentsTable()
+	cr.CreateTable()
 
 	comment := Comment{
 		ExtCommentId:      "cmt123",
@@ -54,14 +50,12 @@ func TestCommentRepositoryInsert(t *testing.T) {
 }
 
 func TestCommentRepositoryFindByPageIdReturnNothing(t *testing.T) {
-	file, db := initTest(t)
-
-	defer db.Close()
-	defer os.Remove(file.Name())
+	db, cleanup:= getTestEmptyDbConnection()
+	defer cleanup()
 
 	cr := NewCommentRepository(db)
 
-	cr.CreateCommentsTable()
+	cr.CreateTable()
 
 	comments := cr.FindByPageId(1)
 
@@ -71,13 +65,11 @@ func TestCommentRepositoryFindByPageIdReturnNothing(t *testing.T) {
 }
 
 func TestCommentRepositoryUpdate(t *testing.T) {
-	file, db := initTest(t)
-
-	defer db.Close()
-	defer os.Remove(file.Name())
+	db, cleanup:= getTestEmptyDbConnection()
+	defer cleanup()
 
 	cr := NewCommentRepository(db)
-	cr.CreateCommentsTable()
+	cr.CreateTable()
 
 	pageId := 1
 
@@ -108,7 +100,7 @@ func TestCommentRepositoryUpdate(t *testing.T) {
 		Colour:            "red",
 		Score:             20,
 	}
-	cr.Update(updatedComment)
+	cr.Update(&updatedComment)
 
 	// Verify the update
 	comments := cr.FindByPageId(pageId)
@@ -128,16 +120,4 @@ func TestCommentRepositoryUpdate(t *testing.T) {
 		updated.Score != updatedComment.Score {
 		t.Fatalf("Expected %v, got %v", updatedComment, updated)
 	}
-}
-
-func initTest(t *testing.T) (*os.File, *sql.DB) {
-	file, err := os.CreateTemp("", "CommentRepository.sql")
-
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-
-	db := GetDbConnection(file.Name())
-
-	return file, db
 }

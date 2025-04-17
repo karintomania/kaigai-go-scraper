@@ -22,7 +22,7 @@ type Comment struct {
 	Translated        bool
 }
 
-func (r *CommentRepository) Update(comment Comment) {
+func (r *CommentRepository) Update(comment *Comment) {
 	cmd := `UPDATE comments SET ext_comment_id = ?, page_id = ?, user_name = ?, content = ?, translated_content = ?, indent = ?, reply = ?, colour = ?, score = ?, translated = ? WHERE id = ?`
 
 	_, err := r.db.Exec(cmd,
@@ -118,7 +118,7 @@ func (r *CommentRepository) FindByPageId(pageId int) []Comment {
 	return comments
 }
 
-func (r *CommentRepository) CreateCommentsTable() {
+func (r *CommentRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS comments(
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 ext_comment_id STRING NOT NULL,

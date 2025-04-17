@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestCallGemini(t *testing.T) {
+func TestActuallyCallGemini(t *testing.T) {
 	// This test is only for local testing
 	return
 

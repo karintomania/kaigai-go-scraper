@@ -1,24 +1,16 @@
 package db
 
 import (
-	"os"
 	"testing"
 )
 
 func TestPageRepositoryInsert(t *testing.T) {
-	file, err := os.CreateTemp("", "PageRepository.sql")
-
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(file.Name())
-
-	db := GetDbConnection(file.Name())
-	defer db.Close()
+	db, cleanup:= getTestEmptyDbConnection()
+	defer cleanup()
 
 	pr := NewPageRepository(db)
 
-	pr.CreatePagesTable()
+	pr.CreateTable()
 
 	page := Page{
 		ExtId:           "12345",
@@ -60,17 +52,11 @@ func TestPageRepositoryInsert(t *testing.T) {
 }
 
 func TestPageRepositoryUpdate(t *testing.T) {
-	file, err := os.CreateTemp("", "PageRepository.sql")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(file.Name())
-
-	db := GetDbConnection(file.Name())
-	defer db.Close()
+	db, cleanup:= getTestEmptyDbConnection()
+	defer cleanup()
 
 	pr := NewPageRepository(db)
-	pr.CreatePagesTable()
+	pr.CreateTable()
 
 	// Insert initial page
 	page := Page{
@@ -126,18 +112,12 @@ func TestPageRepositoryUpdate(t *testing.T) {
 }
 
 func TestPageRepositoryFindByDateReturnNothing(t *testing.T) {
-	file, err := os.CreateTemp("", "PageRepository.sql")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(file.Name())
-
-	db := GetDbConnection(file.Name())
-	defer db.Close()
+	db, cleanup:= getTestEmptyDbConnection()
+	defer cleanup()
 
 	pr := NewPageRepository(db)
 
-	pr.CreatePagesTable()
+	pr.CreateTable()
 
 	pages := pr.FindByDate("2025-01-01")
 

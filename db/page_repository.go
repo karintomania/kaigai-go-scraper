@@ -123,7 +123,7 @@ func (r *PageRepository) FindByDate(date string) []Page {
 
 }
 
-func (r *PageRepository) CreatePagesTable() {
+func (r *PageRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS pages(
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			ext_id STRING NOT NULL,
