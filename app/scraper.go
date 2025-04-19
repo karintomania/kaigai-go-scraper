@@ -17,15 +17,33 @@ func Scrape(date string) {
 	pageRepository := db.NewPageRepository(dbConn)
 	commentRepository := db.NewCommentRepository(dbConn)
 
-	// if err := StoreLinks(date, linkRepository); err != nil {
-	// 	log.Fatalf("Error storing links: %v", err)
-	// }
+	toStore := false
+	toScrape := false
+	toTranslate := true
 
-	if err := scrapeHtml(
-		date,
-		linkRepository,
-		pageRepository,
-		commentRepository); err != nil {
-		log.Fatalf("Error scraping HTML: %v", err)
+	if toStore {
+
+		if err := StoreLinks(date, linkRepository); err != nil {
+			log.Panicf("Error storing links: %v", err)
+		}
+	}
+
+	if toScrape {
+		if err := scrapeHtml(
+			date,
+			linkRepository,
+			pageRepository,
+			commentRepository); err != nil {
+			log.Panicf("Error scraping HTML: %v", err)
+		}
+	}
+
+	if toTranslate {
+		if err := translate(
+			date,
+			pageRepository,
+			commentRepository); err != nil {
+			log.Panicf("Error translating: %v", err)
+		}
 	}
 }

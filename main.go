@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log/slog"
+	"os"
+
 	"github.com/karintomania/kaigai-go-scraper/app"
 	"github.com/karintomania/kaigai-go-scraper/cmd"
 	_ "github.com/mattn/go-sqlite3"
@@ -8,9 +11,16 @@ import (
 
 func main() {
 	migrate := false
-	scrape := false
+	scrape := true
 
-	date := "2025-04-02"
+	date := "2025-04-03"
+
+	logger := slog.New(slog.NewTextHandler(os.Stdout,
+		&slog.HandlerOptions{
+			AddSource: true,
+		}))
+
+	slog.SetDefault(logger)
 
 	if migrate {
 		cmd.MigrateCmd()

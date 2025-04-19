@@ -84,3 +84,89 @@ func TestScrapeHtml(t *testing.T) {
 	}
 
 }
+
+// Test pruning of comments
+// - 1 (re:5)
+//   - 2 (re:0)
+//   - 3 (re:2)
+//     - 4 (re:1)
+//       - 5 (re:0)
+//     - 6 (re:0)
+// - 7 (re:1)
+//   - 8 (re:0)
+// - 9 (re:0)
+// - 10 (re:0)
+
+func TestSelectRelevantComments(t *testing.T) {
+	maxCommentNum := 6
+	maxChildCommentNum := 3
+
+	comments := []db.Comment{
+		{
+			Id:     1,
+			Indent: 0,
+			Reply:  5,
+		},
+		{
+			Id:     2,
+			Indent: 1,
+			Reply:  0,
+		},
+		{
+			Id:     3,
+			Indent: 1,
+			Reply:  2,
+		},
+		{
+			Id:     4,
+			Indent: 2,
+			Reply:  1,
+		},
+		{
+			Id:     5,
+			Indent: 3,
+			Reply:  0,
+		},
+		{
+			Id:     6,
+			Indent: 2,
+			Reply:  0,
+		},
+		{
+			Id:     7,
+			Indent: 0,
+			Reply:  1,
+		},
+		{
+			Id:     8,
+			Indent: 1,
+			Reply:  0,
+		},
+		{
+			Id:     9,
+			Indent: 0,
+			Reply:  0,
+		},
+		{
+			Id:     10,
+			Indent: 0,
+			Reply:  0,
+		},
+	}
+
+	wantIds := []int{1, 2, 3, 4, 7, 8}
+
+	result := selectRelevantComments(comments, maxCommentNum, maxChildCommentNum)
+
+	t.Logf("result %v", result)
+
+	if want, got := len(wantIds), len(result); want != got {
+		t.Errorf("expected %d elements, but got %d", want, got)
+	}
+
+	for i, gotComment := range result {
+		if want, got := wantIds[i], gotComment.Id; want != got {
+			t.Errorf("expected %d, but got %d", want, got)
+		}
+	}
+}

@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"sort"
 
 	"github.com/karintomania/kaigai-go-scraper/db"
@@ -26,6 +27,7 @@ type JsonLink struct {
 const TOP_LINK_NUM = 10
 
 func StoreLinks(dateString string, linkRepository *db.LinkRepository) error {
+	slog.Info("Start storing links")
 	jsonLinks, err := callHckrNewsApi(dateString)
 	if err != nil {
 		return err
@@ -35,7 +37,7 @@ func StoreLinks(dateString string, linkRepository *db.LinkRepository) error {
 
 	for _, link := range links {
 		linkRepository.Insert(&link)
-		fmt.Printf("Inserted link: %s\n", link.URL)
+		slog.Info(fmt.Sprintf("Inserted link: %s\n", link.URL))
 	}
 
 	return nil

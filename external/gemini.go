@@ -7,11 +7,19 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"strings"
+	"time"
 
 	"encoding/json"
 
 	"github.com/karintomania/kaigai-go-scraper/common"
 )
+
+type CallAI func(string) string
+
+
+// dogde the rate limit
+const GEMINI_SLEEP_SECONDS = 5
 
 type geminiResponse struct {
 	Candidates []struct {
@@ -34,6 +42,8 @@ func (gr *geminiResponse) getText() string {
 }
 
 func CallGemini(prompt string) string {
+	time.Sleep(GEMINI_SLEEP_SECONDS * time.Second)
+
 	data := geminiHttpCall(prompt)
 
 	var gr geminiResponse
@@ -43,6 +53,10 @@ func CallGemini(prompt string) string {
 	}
 
 	answer := gr.getText()
+
+	answer = sanitizeResponse(answer)
+
+	slog.Info("gemini answer", slog.String("answer", answer))
 
 	return answer
 }
@@ -54,9 +68,9 @@ func geminiHttpCall(prompt string) []byte {
 		common.GetEnv("gemini_api_key"),
 	)
 
-	body := fmt.Appendf([]byte(`{"contents": [
+	body := []byte(fmt.Sprintf(`{"contents": [
 {"parts": [{"text": "%s"}]}
-]}`), prompt)
+]}`, escapeStringForJSON(prompt)))
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 
@@ -76,16 +90,45 @@ func geminiHttpCall(prompt string) []byte {
 	b := resp.Body
 	defer b.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		slog.Error("gemini returned error status", slog.String("status", resp.Status))
-		panic(resp.Status)
-	}
-
 	responseBytes, err := io.ReadAll(b)
 	if err != nil {
 		slog.Error("failed to read gemini response body", slog.Any("err", err))
 		panic(err)
 	}
 
+	if resp.StatusCode != http.StatusOK {
+		slog.Error("gemini returned error status", slog.String("status", resp.Status), slog.String("body", string(responseBytes)))
+		panic(resp.Status)
+	}
+
 	return responseBytes
+}
+
+func escapeStringForJSON(s string) string {
+	escapedBytes, err := json.Marshal([]string{s})
+	if err != nil {
+		log.Panic(err)
+	}
+	// Remove [" and "]
+	escapedString := string(escapedBytes[2 : len(escapedBytes)-2]) 
+
+	return escapedString
+}
+
+// this removes code block markers (```json or ```) from the beginning and end of a string.
+// Gemini often add these quotes.
+func sanitizeResponse(answer string) string {
+	answer = strings.TrimSpace(answer)
+
+	if strings.HasPrefix(answer, "```json") {
+		answer = answer[len("```json"):]
+	} else if strings.HasPrefix(answer, "```") {
+		answer = answer[len("```"):]
+	}
+
+	if strings.HasSuffix(answer, "```") {
+		answer = answer[:len(answer)-len("```")]
+	}
+
+	return strings.TrimSpace(answer)
 }

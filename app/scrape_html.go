@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,7 +17,8 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/external"
 )
 
-const MAX_COMMENT_NUM = 100
+const MAX_COMMENTS_NUM = 100
+const MAX_REPLY_PER_COMMENT_NUM = 30
 
 func scrapeHtml(
 	dateString string,
@@ -35,7 +37,9 @@ func scrapeHtml(
 		_, comments := getPageAndComments(&page)
 		pageRepository.Update(&page)
 
-		for _, comment := range comments {
+		selectedComments := selectRelevantComments(comments, MAX_COMMENTS_NUM, MAX_REPLY_PER_COMMENT_NUM)
+
+		for _, comment := range selectedComments {
 			commentRepository.Insert(&comment)
 		}
 	}
@@ -57,9 +61,15 @@ func downloadHtmlsAsync(
 	for _, link := range links {
 		wg.Add(1)
 		time.Sleep(1 * time.Second)
+
 		go func(link *db.Link) {
-			if err := downloadHtml(link, dateString, pageRepository); err != nil {
-				slog.Error("Error happend while downloading HTML", slog.String("url", link.URL), slog.Any("err", err))
+			err := downloadHtml(link, dateString, pageRepository)
+			if err != nil {
+				slog.Error(
+					"Error happend while downloading HTML",
+					slog.String("url", link.URL),
+					slog.Any("err", err),
+				)
 
 				errMutex.Lock()
 				errEncountered = err
@@ -126,9 +136,6 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 
 	// loop all comments
 	doc.Find("tr.athing.comtr").Each(func(i int, s *goquery.Selection) {
-		if i > MAX_COMMENT_NUM {
-			return
-		}
 		// get reply
 		reply, err := strconv.Atoi(s.Find("a.clicky.togg").AttrOr("n", "0"))
 		if err != nil {
@@ -169,4 +176,72 @@ func getSlug(str string) string {
 
 	return strings.Join(words, "_")
 
+}
+
+// select comments by relevance
+// HN already sort the comments by relevance,
+// but sometimes, child comments are not really related to the main thread.
+// So, this method only gets the first n-th child comments by reply number
+func selectRelevantComments(
+	comments []db.Comment,
+	maxCommentNum int,
+	maxChildCommentNum int,
+) []db.Comment {
+	if len(comments) < maxCommentNum {
+		return comments
+	}
+
+	result := make([]db.Comment, 0)
+
+	children := make([]db.Comment, 0)
+
+	for i, c := range comments {
+		if c.Indent == 0 {
+			result = append(result, c)
+		} else {
+			children = append(children, c)
+
+			// if this is the last child comment
+			next := i + 1
+
+			if next == len(comments) || comments[next].Indent == 0 {
+				// prune child comments if child comments are too many
+				if len(children) >= maxChildCommentNum {
+					pruneChildrenComments(&children, maxChildCommentNum)
+				}
+
+				// add children to the result
+				result = append(result, children...)
+				// reset children
+				children = make([]db.Comment, 0)
+			}
+		}
+	}
+
+	return result[:maxCommentNum]
+}
+
+func pruneChildrenComments(commentsPtr *[]db.Comment, maxChildCommentNum int) {
+	comments := *commentsPtr
+
+	// sort by reply number
+	sort.Slice(comments, func(i, j int) bool {
+		if comments[j].Reply != comments[i].Reply {
+			return comments[i].Reply > comments[j].Reply
+		}
+
+		// if the reply is the same, sort by id ascend
+		return comments[i].Id < comments[j].Id
+	})
+
+	// get first n-th (n = max child comment limit)
+	comments = comments[:maxChildCommentNum]
+
+	// sort by id ascend again
+	sort.Slice(comments, func(i, j int) bool {
+		return comments[i].Id < comments[j].Id
+	})
+
+	// update comments
+	*commentsPtr = comments
 }
