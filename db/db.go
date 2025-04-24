@@ -3,11 +3,9 @@ package db
 import (
 	"database/sql"
 	"log"
-
-	"github.com/karintomania/kaigai-go-scraper/common"
 )
 
-const rfc3339Milli = "2006-01-02T15:04:05.000Z07:00"
+const Rfc3339Milli = "2006-01-02T15:04:05.000Z07:00"
 
 type TableCreater interface {
 	CreateTable()
@@ -41,17 +39,14 @@ func getTestEmptyDbConnection() (*sql.DB, func()) {
 }
 
 func GetTestDbConnection() (*sql.DB, func()) {
-	db, cleanup := getTestEmptyDbConnection()
+	dbConn, cleanup := getTestEmptyDbConnection()
 
-	Migrate()
+	Migrate(dbConn)
 
-	return db, cleanup
+	return dbConn, cleanup
 }
 
-func Migrate() {
-	dbConn := GetDbConnection(common.GetEnv("db_path"))
-	defer dbConn.Close()
-
+func Migrate(dbConn *sql.DB) {
 	repos := []TableCreater{
 		NewLinkRepository(dbConn),
 		NewCommentRepository(dbConn),

@@ -3,14 +3,17 @@ package app
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
+	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
+	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
 const (
-
 	// use {{ "}}" }} to escape curly braces
 	TEMPLATE_PAGE = `
 > {{.Title}}
@@ -22,7 +25,7 @@ const (
 {{ if (toStartDetails $i) }}
 {{ "{{" }}< details summary="もっとコメントを表示（{{getDetailPageCount $i}}）">{{ "}}" }}
 {{ end }}
-{{ "{{" }}<matomeQuote body="{{ $comment.TranslatedContent }}" userName="{{ $comment.UserName }}" createdAt="2025/02/02" color="{{ $comment.Colour }}">{{ "}}" }}
+{{ "{{" }}<matomeQuote body="{{ $comment.TranslatedContent }}" userName="{{ $comment.UserName }}" createdAt="{{ (formatCommentedAt $comment.CommentedAt) }}" color="{{ $comment.Colour }}">{{ "}}" }}
 {{ if (toCloseDetails $i ) }}
 {{ "{{" }}</details>{{ "}}" }}
 {{ end }}
@@ -47,34 +50,42 @@ type ArticleGenerator struct {
 	pr       *db.PageRepository
 	cr       *db.CommentRepository
 	getImage func() string
+	getColour func() string
 }
 
 func NewArticleGenerator(
 	pr *db.PageRepository,
 	cr *db.CommentRepository,
-	options ...func(*ArticleGenerator),
 ) *ArticleGenerator {
 	ag := &ArticleGenerator{
 		pr:       pr,
 		cr:       cr,
 		getImage: defaultGetImage,
-	}
-
-	for _, options := range options {
-		options(ag)
+		getColour: defaultGetColour,
 	}
 
 	return ag
 }
 
-func WithGetImage(getImage func() string) func(*ArticleGenerator) {
-	return func(ag *ArticleGenerator) {
-		ag.getImage = getImage
+func NewTestArticleGenerator(
+	pr *db.PageRepository,
+	cr *db.CommentRepository,
+	getImage func() string,
+	getColour func() string,
+) *ArticleGenerator {
+	ag := &ArticleGenerator{
+		pr:       pr,
+		cr:       cr,
+		getImage: getImage,
+		getColour: getColour,
 	}
+
+	return ag
 }
 
 func defaultGetColour() string {
-	return "#000000"
+	colours := []string{"#38d3d3", "#ff5733", "#45d325", "#785bff", "#ff33a1", "#ff5c5c"}
+	return colours[rand.Intn(len(colours))]
 }
 
 func (ag *ArticleGenerator) generateArticles(dateStr string) error {
@@ -87,6 +98,17 @@ func (ag *ArticleGenerator) generateArticle(
 	page *db.Page,
 	comments []db.Comment,
 ) (string, error) {
+	minimumColourScore, err := strconv.Atoi(common.GetEnv("minimum_colour_score"))
+	if err != nil {
+		return "", err
+	}
+
+	for i, _ := range comments {
+		if comments[i].Score >=  minimumColourScore{
+			comments[i].Colour = ag.getColour()
+		}
+	}
+
 	fs := FrontmatterStruct{
 		Date:  dateStr + "T00:00:00",
 		Month: strings.Replace(dateStr[0:7], "-", "/", -1),
@@ -98,7 +120,7 @@ func (ag *ArticleGenerator) generateArticle(
 	frontmatterTmpl := template.Must(template.New("frontmatter").Parse(TEMPLATE_FRONTMATTER))
 	var buf bytes.Buffer
 
-	err := frontmatterTmpl.Execute(&buf, fs)
+	err = frontmatterTmpl.Execute(&buf, fs)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate frontmatter template, %w", err)
 	}
@@ -125,6 +147,9 @@ func (ag *ArticleGenerator) generateArticle(
 					// the last comment of the chunk or the last comment
 					return (i%chunk == chunk-1 || i == len(comments)-1) && i > chunk
 				},
+				"formatCommentedAt": func(str string) string {
+					return formatCommentedAt(str)
+				},
 			},
 		).Parse(TEMPLATE_PAGE))
 
@@ -150,4 +175,15 @@ type ArticleStruct struct {
 	Url             string
 	TemplateRefLink string
 	Comments        []db.Comment
+}
+
+func formatCommentedAt(src string) string {
+	date, err := time.Parse(db.Rfc3339Milli, src)
+	if err != nil {
+		return fmt.Sprintf("%v", err)
+	}
+
+	formatted := date.Format("2006/01/02 15:04:05")
+
+	return formatted
 }
