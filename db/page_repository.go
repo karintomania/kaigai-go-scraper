@@ -21,6 +21,7 @@ type Page struct {
 	Tags            string // comma separated tags
 	Translated      bool
 	Published       bool
+	CreatedAt       string
 }
 
 func (r *PageRepository) Update(page *Page) {
@@ -67,7 +68,8 @@ func (r *PageRepository) Insert(page *Page) {
 		page.RefUrl,
 		page.Tags,
 		page.Translated,
-		page.Published)
+		page.Published,
+	)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -96,27 +98,29 @@ func (r *PageRepository) FindByDate(date string) []Page {
 	Pages := make([]Page, 0)
 
 	for rows.Next() {
-		var Page Page
+		var page Page
 
 		err := rows.Scan(
-			&Page.Id,
-			&Page.ExtId,
-			&Page.Date,
-			&Page.Html,
-			&Page.Title,
-			&Page.TranslatedTitle,
-			&Page.Slug,
-			&Page.Url,
-			&Page.RefUrl,
-			&Page.Tags,
-			&Page.Translated,
-			&Page.Published)
+			&page.Id,
+			&page.ExtId,
+			&page.Date,
+			&page.Html,
+			&page.Title,
+			&page.TranslatedTitle,
+			&page.Slug,
+			&page.Url,
+			&page.RefUrl,
+			&page.Tags,
+			&page.Translated,
+			&page.Published,
+			&page.CreatedAt,
+		)
 
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		Pages = append(Pages, Page)
+		Pages = append(Pages, page)
 	}
 
 	return Pages
@@ -125,18 +129,19 @@ func (r *PageRepository) FindByDate(date string) []Page {
 
 func (r *PageRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS pages(
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			ext_id STRING NOT NULL,
-			date STRING NOT NULL,
-			html STRING NOT NULL,
-			title STRING,
-			translated_title STRING,
-			slug STRING,
-			url STRING NOT NULL UNIQUE,
-			ref_url STRING,
-			tags STRING,
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+ext_id STRING NOT NULL,
+date STRING NOT NULL,
+html STRING NOT NULL,
+title STRING,
+translated_title STRING,
+slug STRING,
+url STRING NOT NULL UNIQUE,
+ref_url STRING,
+tags STRING,
 translated BOOLEAN NOT NULL DEFAULT 0,
-published BOOLEAN NOT NULL DEFAULT 0
+published BOOLEAN NOT NULL DEFAULT 0,
+created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
 	)`
 
 	_, err := r.db.Exec(cmd)
@@ -146,8 +151,18 @@ published BOOLEAN NOT NULL DEFAULT 0
 	}
 }
 
-func (r *PageRepository) DropPagesTable() {
+func (r *PageRepository) Drop() {
 	cmd := "DROP TABLE IF EXISTS pages"
+
+	_, err := r.db.Exec(cmd)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func (r *PageRepository) Truncate() {
+	cmd := "DELETE from pages"
 
 	_, err := r.db.Exec(cmd)
 

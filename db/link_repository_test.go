@@ -2,54 +2,48 @@ package db
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-func TestLinkRepositoryInsert(t *testing.T) {
+func TestLinkRepository(t *testing.T) {
 	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
 	lr := NewLinkRepository(db)
-
 	lr.CreateTable()
 
-	link := Link{
-		ExtId:   "12345",
-		Date:    "2025-01-01",
-		URL:     "https://example.com/12345",
-		Title:   "Example Title",
-		Scraped: false,
-	}
+	t.Run("Insert", func(t *testing.T) {
+		lr.Truncate()
 
-	lr.Insert(&link)
+		link := Link{
+			ExtId:   "12345",
+			Date:    "2025-01-01",
+			URL:     "https://example.com/12345",
+			Title:   "Example Title",
+			Scraped: false,
+		}
 
-	links := lr.FindByDate("2025-01-01")
+		lr.Insert(&link)
 
-	if want, got := 1, len(links); want != got {
-		t.Fatalf("Expected %d link, got %d", want, got)
-	}
+		links := lr.FindByDate("2025-01-01")
 
-	created := links[0]
+		require.Equal(t, 1, len(links), "Expected 1 link")
 
-	if created.ExtId != link.ExtId ||
-		created.Date != link.Date ||
-		created.URL != link.URL ||
-		created.Title != link.Title ||
-		created.Scraped != link.Scraped {
-		t.Fatalf("Expected %v, got %v", link, created)
-	}
-}
+		created := links[0]
 
-func TestLinkRepositoryFindByIdReturnNothing(t *testing.T) {
-	db, cleanup := getTestEmptyDbConnection()
-	defer cleanup()
+		require.Equal(t, link.ExtId, created.ExtId, "ExtId mismatch")
+		require.Equal(t, link.Date, created.Date, "Date mismatch")
+		require.Equal(t, link.URL, created.URL, "URL mismatch")
+		require.Equal(t, link.Title, created.Title, "Title mismatch")
+		require.Equal(t, link.Scraped, created.Scraped, "Scraped mismatch")
+	})
 
-	lr := NewLinkRepository(db)
+	t.Run("FindByIdReturnNothing", func(t *testing.T) {
+		lr.Truncate()
 
-	lr.CreateTable()
+		links := lr.FindByDate("2025-01-01")
 
-	links := lr.FindByDate("2025-01-01")
-
-	if want, got := 0, len(links); want != got {
-		t.Fatalf("Expected %d link, got %d", want, got)
-	}
+		require.Equal(t, 0, len(links), "Expected 0 links")
+	})
 }

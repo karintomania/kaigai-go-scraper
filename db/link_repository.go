@@ -9,12 +9,13 @@ import (
 )
 
 type Link struct {
-	Id      int
-	ExtId   string // ID of the original service e.g. HN
-	Date    string
-	URL     string
-	Title   string
-	Scraped bool
+	Id        int
+	ExtId     string // ID of the original service e.g. HN
+	Date      string
+	URL       string
+	Title     string
+	Scraped   bool
+	CreatedAt string
 }
 
 func (r *LinkRepository) Update(link *Link) {
@@ -67,7 +68,7 @@ func (r *LinkRepository) FindByDate(date string) []Link {
 	for rows.Next() {
 		var link Link
 
-		err := rows.Scan(&link.Id, &link.ExtId, &link.Date, &link.URL, &link.Title, &link.Scraped)
+		err := rows.Scan(&link.Id, &link.ExtId, &link.Date, &link.URL, &link.Title, &link.Scraped, &link.CreatedAt)
 
 		if err != nil {
 			log.Fatalln(err)
@@ -82,12 +83,13 @@ func (r *LinkRepository) FindByDate(date string) []Link {
 
 func (r *LinkRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS links(
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			ext_id STRING NOT NULL,
-			date STRING NOT NULL,
-			url STRING NOT NULL UNIQUE,
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+ext_id STRING NOT NULL,
+date STRING NOT NULL,
+url STRING NOT NULL UNIQUE,
 title STRING NOT NULL,
-scraped BOOLEAN NOT NULL DEFAULT 0
+scraped BOOLEAN NOT NULL DEFAULT 0,
+created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
 	)`
 
 	_, err := r.db.Exec(cmd)
@@ -97,8 +99,18 @@ scraped BOOLEAN NOT NULL DEFAULT 0
 	}
 }
 
-func (r *LinkRepository) DropLinksTable() {
+func (r *LinkRepository) Drop() {
 	cmd := "DROP TABLE IF EXISTS links"
+
+	_, err := r.db.Exec(cmd)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func (r *LinkRepository) Truncate() {
+	cmd := "DELETE from links"
 
 	_, err := r.db.Exec(cmd)
 

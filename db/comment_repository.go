@@ -20,10 +20,12 @@ type Comment struct {
 	Colour            string
 	Score             int
 	Translated        bool
+	CommentedAt       string
+	CreatedAt         string
 }
 
 func (r *CommentRepository) Update(comment *Comment) {
-	cmd := `UPDATE comments SET ext_comment_id = ?, page_id = ?, user_name = ?, content = ?, translated_content = ?, indent = ?, reply = ?, colour = ?, score = ?, translated = ? WHERE id = ?`
+	cmd := `UPDATE comments SET ext_comment_id = ?, page_id = ?, user_name = ?, content = ?, translated_content = ?, indent = ?, reply = ?, colour = ?, score = ?, translated = ?, commented_at = ? WHERE id = ?`
 
 	_, err := r.db.Exec(cmd,
 		comment.ExtCommentId,
@@ -36,6 +38,7 @@ func (r *CommentRepository) Update(comment *Comment) {
 		comment.Colour,
 		comment.Score,
 		comment.Translated,
+		comment.CommentedAt,
 		comment.Id)
 
 	if err != nil {
@@ -52,7 +55,7 @@ func NewCommentRepository(db *sql.DB) *CommentRepository {
 }
 
 func (r *CommentRepository) Insert(comment *Comment) {
-	cmd := `INSERT INTO comments (ext_comment_id, page_id, user_name, content, translated_content, indent, reply, colour, score, translated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	cmd := `INSERT INTO comments (ext_comment_id, page_id, user_name, content, translated_content, indent, reply, colour, score, translated, commented_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.db.Exec(cmd,
 		comment.ExtCommentId,
@@ -64,7 +67,8 @@ func (r *CommentRepository) Insert(comment *Comment) {
 		comment.Reply,
 		comment.Colour,
 		comment.Score,
-		comment.Translated)
+		comment.Translated,
+		comment.CommentedAt)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -106,7 +110,10 @@ func (r *CommentRepository) FindByPageId(pageId int) []Comment {
 			&comment.Reply,
 			&comment.Colour,
 			&comment.Score,
-			&comment.Translated)
+			&comment.Translated,
+			&comment.CommentedAt,
+			&comment.CreatedAt,
+		)
 
 		if err != nil {
 			log.Fatalln(err)
@@ -120,7 +127,7 @@ func (r *CommentRepository) FindByPageId(pageId int) []Comment {
 
 func (r *CommentRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS comments(
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+id INTEGER PRIMARY KEY AUTOINCREMENT,
 ext_comment_id STRING NOT NULL,
 page_id INTEGER NOT NULL,
 user_name STRING NOT NULL,
@@ -130,8 +137,10 @@ indent STRING,
 reply STRING,
 colour STRING,
 score INTEGER,
-translated BOOLEAN NOT NULL DEFAULT 0
-	)`
+translated BOOLEAN NOT NULL DEFAULT 0,
+commented_at STRING,
+created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
+)`
 
 	_, err := r.db.Exec(cmd)
 
@@ -140,8 +149,18 @@ translated BOOLEAN NOT NULL DEFAULT 0
 	}
 }
 
-func (r *CommentRepository) DropCommentsTable() {
+func (r *CommentRepository) Drop() {
 	cmd := "DROP TABLE IF EXISTS comments"
+
+	_, err := r.db.Exec(cmd)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func (r *CommentRepository) Truncate() {
+	cmd := "DELETE from comments"
 
 	_, err := r.db.Exec(cmd)
 
