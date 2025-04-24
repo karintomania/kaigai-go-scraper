@@ -207,8 +207,6 @@ func translateCommentChunk(title string, comments []db.Comment, callAi external.
 
 	prompt := fmt.Sprintf(PROMPT_COMMENT, title, string(jsonComments))
 
-	fmt.Println(prompt)
-
 	answer := callAi(prompt)
 
 	var result CommentsForTranslation
@@ -243,6 +241,6 @@ func sanitizeTranslatedComment(c string) string {
 	c = strings.ReplaceAll(c, `<`, `＜`)
 	c = strings.ReplaceAll(c, `>`, `＞`)
 	c = strings.ReplaceAll(c, `$$br$$`, `<br>`)
-	
+
 	return c
 }

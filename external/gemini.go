@@ -17,7 +17,6 @@ import (
 
 type CallAI func(string) string
 
-
 // dogde the rate limit
 const GEMINI_SLEEP_SECONDS = 5
 
@@ -110,7 +109,7 @@ func escapeStringForJSON(s string) string {
 		log.Panic(err)
 	}
 	// Remove [" and "]
-	escapedString := string(escapedBytes[2 : len(escapedBytes)-2]) 
+	escapedString := string(escapedBytes[2 : len(escapedBytes)-2])
 
 	return escapedString
 }
@@ -120,15 +119,10 @@ func escapeStringForJSON(s string) string {
 func sanitizeResponse(answer string) string {
 	answer = strings.TrimSpace(answer)
 
-	if strings.HasPrefix(answer, "```json") {
-		answer = answer[len("```json"):]
-	} else if strings.HasPrefix(answer, "```") {
-		answer = answer[len("```"):]
-	}
+	answer = strings.TrimPrefix(answer, "```json")
+	answer = strings.TrimPrefix(answer, "```")
 
-	if strings.HasSuffix(answer, "```") {
-		answer = answer[:len(answer)-len("```")]
-	}
+	answer = strings.TrimSuffix(answer, "```")
 
 	return strings.TrimSpace(answer)
 }

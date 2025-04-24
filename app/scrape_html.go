@@ -27,9 +27,9 @@ func scrapeHtml(
 	commentRepository *db.CommentRepository,
 ) error {
 
-	// if err := downloadHtmlsAsync(dateString, linkRepository, pageRepository); err != nil {
-	// 	return err
-	// }
+	if err := downloadHtmlsAsync(dateString, linkRepository, pageRepository); err != nil {
+		return err
+	}
 
 	pages := pageRepository.FindByDate(dateString)
 

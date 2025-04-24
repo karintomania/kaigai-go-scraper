@@ -48,8 +48,6 @@ func TestScrapeHtml(t *testing.T) {
 
 	page, comments := getPageAndComments(page)
 
-	t.Logf("Comments: %v", comments)
-
 	if want, got := "test_title_which_is_made_way_too_long", page.Slug; want != got {
 		t.Errorf("expected slug to be %s, but got %s", want, got)
 	}
@@ -157,8 +155,6 @@ func TestSelectRelevantComments(t *testing.T) {
 	wantIds := []int{1, 2, 3, 4, 7, 8}
 
 	result := selectRelevantComments(comments, maxCommentNum, maxChildCommentNum)
-
-	t.Logf("result %v", result)
 
 	if want, got := len(wantIds), len(result); want != got {
 		t.Errorf("expected %d elements, but got %d", want, got)

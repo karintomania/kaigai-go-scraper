@@ -7,8 +7,6 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
-const file string = "./db.sql"
-
 func Scrape(date string) {
 	dbConn := db.GetDbConnection(common.GetEnv("db_path"))
 	defer dbConn.Close()

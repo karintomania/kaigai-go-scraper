@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/karintomania/kaigai-go-scraper/db"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTranslateTitle(t *testing.T) {
@@ -33,8 +34,6 @@ func TestTranslateTitle(t *testing.T) {
 	}
 
 	translateTitle(page, comments, callAIMock)
-
-	t.Logf("page %v", page)
 
 	if want, got := translatedTitle, page.TranslatedTitle; want != got {
 		t.Errorf("Expected %s, got %s", want, got)
@@ -69,7 +68,9 @@ func TestTranslateComment(t *testing.T) {
 		]}`
 	}
 
-	translateCommentChunk("翻訳タイトル", comments, callAIMock)
+	_, err := translateCommentChunk("翻訳タイトル", comments, callAIMock)
+
+	require.NoError(t, err)
 
 	for i, comment := range comments {
 		if fmt.Sprintf("翻訳コメント %d", i+1) != comment.TranslatedContent ||
@@ -87,7 +88,7 @@ func TestSanitizeTranslatedComment(t *testing.T) {
 	}{
 		{"<test>", "＜test＞"}, // escape <>
 		// escape quotes
-		{`'quoted', "double-quoted"`, `’quoted’, ”double-quoted”`}, 
+		{`'quoted', "double-quoted"`, `’quoted’, ”double-quoted”`},
 		// keep br
 		{"<br>", "<br>"},
 		// convert new line to br
