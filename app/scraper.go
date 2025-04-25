@@ -15,12 +15,12 @@ func Scrape(date string) {
 	pageRepository := db.NewPageRepository(dbConn)
 	commentRepository := db.NewCommentRepository(dbConn)
 
-	toStore := false
-	toScrape := false
+	toStoreLink := true
+	toScrape := true
 	toTranslate := true
+	toGenerate := true
 
-	if toStore {
-
+	if toStoreLink {
 		if err := StoreLinks(date, linkRepository); err != nil {
 			log.Panicf("Error storing links: %v", err)
 		}
@@ -41,6 +41,14 @@ func Scrape(date string) {
 			date,
 			pageRepository,
 			commentRepository); err != nil {
+			log.Panicf("Error translating: %v", err)
+		}
+	}
+
+	if toGenerate {
+		ag := NewArticleGenerator(pageRepository, commentRepository)
+
+		if err := ag.generateArticles(date); err != nil {
 			log.Panicf("Error translating: %v", err)
 		}
 	}

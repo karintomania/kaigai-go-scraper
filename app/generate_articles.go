@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"text/template"
@@ -89,6 +90,36 @@ func defaultGetColour() string {
 }
 
 func (ag *ArticleGenerator) generateArticles(dateStr string) error {
+
+	pages := ag.pr.FindByDate(dateStr)
+
+	for _, page := range pages {
+		comments := ag.cr.FindByPageId(page.Id)
+
+		article, err := ag.generateArticle(dateStr, &page, comments)
+
+		if err != nil { return err }
+
+		outputFolder := fmt.Sprintf(
+			"%s/%s/%s",
+			common.GetEnv("output_article_folder"),
+			dateStr,
+			page.Slug,
+			)
+		if err := os.MkdirAll(outputFolder, 0774); err != nil {
+			return err
+		}
+
+		outputFile := fmt.Sprintf("%s/index.md", outputFolder)
+
+		file, err := os.Create(outputFile)
+		if err != nil { return err }
+
+
+		if _, err := file.WriteString(article); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

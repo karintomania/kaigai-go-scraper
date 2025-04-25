@@ -53,7 +53,7 @@ func TestGenerateArticle(t *testing.T) {
 		cr,
 		mockGetImage,
 		mockGetColour,
-		)
+	)
 
 	// Test case 1: Basic functionality
 	article, err := ag.generateArticle("2025-01-01", page, comments)
@@ -66,7 +66,6 @@ func TestGenerateArticle(t *testing.T) {
 	require.Contains(t, article, `tags = ["tag1", "tag2"]`)
 	require.Contains(t, article, `featureimage = 'mock_image.jpg'`)
 	require.Contains(t, article, `引用元：[http://example.com](http://example.com)`)
-
 
 	for i := 1; i < 28; i++ {
 		date := fmt.Sprintf("2025/12/%02d 00:01:02", i)
