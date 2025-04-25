@@ -13,12 +13,10 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
 	"github.com/karintomania/kaigai-go-scraper/external"
 )
-
-const MAX_COMMENTS_NUM = 20
-const MAX_REPLY_PER_COMMENT_NUM = 2
 
 func scrapeHtml(
 	dateString string,
@@ -37,7 +35,10 @@ func scrapeHtml(
 		_, comments := getPageAndComments(&page)
 		pageRepository.Update(&page)
 
-		selectedComments := selectRelevantComments(comments, MAX_COMMENTS_NUM, MAX_REPLY_PER_COMMENT_NUM)
+		maxCommentsNum := common.GetEnvInt("max_comments_num")
+		maxReplyPerComment := common.GetEnvInt("max_reply_per_comment_num")
+
+		selectedComments := selectRelevantComments(comments, maxCommentsNum, maxReplyPerComment)
 
 		for _, comment := range selectedComments {
 			commentRepository.Insert(&comment)
