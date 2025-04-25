@@ -15,7 +15,7 @@ func Scrape(date string) {
 	pageRepository := db.NewPageRepository(dbConn)
 	commentRepository := db.NewCommentRepository(dbConn)
 
-	toStoreLink := true
+	toStoreLink := false
 	toScrape := true
 	toTranslate := true
 	toGenerate := true

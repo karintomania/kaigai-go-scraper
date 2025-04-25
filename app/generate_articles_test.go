@@ -24,7 +24,9 @@ func TestGenerateArticle(t *testing.T) {
 		return "#000000"
 	}
 
-	common.MockEnv("minimum_colour_score", "20")
+	common.MockEnv("minimum_colour_score", "40")
+	common.MockEnv("comment_fold_chunk_num", "10")
+	common.MockEnv("lowest_comment_score", "20")
 
 	page := &db.Page{
 		Id:              1,
@@ -41,12 +43,20 @@ func TestGenerateArticle(t *testing.T) {
 			Id:                i,
 			UserName:          fmt.Sprintf("User-%d", i),
 			TranslatedContent: fmt.Sprintf("コメント %d", i),
-			Score:             i,
-			CommentedAt:       fmt.Sprintf("2025-12-%02dT00:01:02.345Z", i),
+			Score:             i + 20,
+			CommentedAt:       fmt.Sprintf("2025-12-%02dT00:01:02", i),
 		}
 
 		comments = append(comments, c)
 	}
+
+	comments = append(comments, db.Comment{
+			Id:                28,
+			UserName:          fmt.Sprintf("User-%d", 28),
+			TranslatedContent: fmt.Sprintf("low score comment!!"),
+			Score:             10,
+			CommentedAt:       fmt.Sprintf("2025-12-28T00:01:02"),
+	})
 
 	ag := NewTestArticleGenerator(
 		pr,
@@ -77,6 +87,7 @@ func TestGenerateArticle(t *testing.T) {
 		require.Contains(t, article, fmt.Sprintf(`{{<matomeQuote body="コメント %d" userName="User-%d" createdAt="%s" color="%s">}}`, i, i, date, colour))
 	}
 
+	// require.NotContains(t, article, "low score comment!!")
 	require.Contains(t, article, `{{< details summary="もっとコメントを表示（1）">}}`)
 	require.Contains(t, article, `{{< details summary="もっとコメントを表示（2）">}}`)
 	require.NotContains(t, article, `{{< details summary="もっとコメントを表示（3）">}}`)

@@ -3,12 +3,11 @@ package app
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"os"
-	"strconv"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
@@ -86,6 +85,7 @@ func NewTestArticleGenerator(
 
 func defaultGetColour() string {
 	colours := []string{"#38d3d3", "#ff5733", "#45d325", "#785bff", "#ff33a1", "#ff5c5c"}
+
 	return colours[rand.Intn(len(colours))]
 }
 
@@ -97,24 +97,13 @@ func (ag *ArticleGenerator) generateArticles(dateStr string) error {
 		comments := ag.cr.FindByPageId(page.Id)
 
 		article, err := ag.generateArticle(dateStr, &page, comments)
-
 		if err != nil { return err }
 
-		outputFolder := fmt.Sprintf(
-			"%s/%s/%s",
-			common.GetEnv("output_article_folder"),
-			dateStr,
-			page.Slug,
-			)
-		if err := os.MkdirAll(outputFolder, 0774); err != nil {
-			return err
-		}
 
-		outputFile := fmt.Sprintf("%s/index.md", outputFolder)
-
-		file, err := os.Create(outputFile)
+		file, err := ag.getPaths(dateStr, page.Slug)
 		if err != nil { return err }
 
+		slog.Info("generating article", slog.String("path", file.Name()))
 
 		if _, err := file.WriteString(article); err != nil {
 			return err
@@ -124,20 +113,54 @@ func (ag *ArticleGenerator) generateArticles(dateStr string) error {
 	return nil
 }
 
+func (ag *ArticleGenerator) getPaths(dateStr, slug string) (*os.File, error) {
+	folderName := fmt.Sprintf("%s_%s",
+		strings.ReplaceAll(dateStr, "-", "_"),
+		slug,
+		)
+
+	outputFolder := fmt.Sprintf(
+		"%s/%s/%s",
+		common.GetEnv("output_article_folder"),
+		dateStr,
+		folderName,
+		)
+
+	if err := os.MkdirAll(outputFolder, 0774); err != nil {
+		return nil, err
+	}
+
+	outputFile := fmt.Sprintf("%s/index.md", outputFolder)
+
+	file, err := os.Create(outputFile)
+	if err != nil { return nil, err }
+
+	return file, nil
+}
+
+
 func (ag *ArticleGenerator) generateArticle(
 	dateStr string,
 	page *db.Page,
 	comments []db.Comment,
 ) (string, error) {
-	minimumColourScore, err := strconv.Atoi(common.GetEnv("minimum_colour_score"))
-	if err != nil {
-		return "", err
-	}
+	commentsFiltered := make([]db.Comment, 0, 100)
+
+	lowestScore := common.GetEnvInt("lowest_comment_score")
+	minimumColourScore := common.GetEnvInt("minimum_colour_score")
+
 
 	for i, _ := range comments {
+		if comments[i].Score < lowestScore {
+			// skip low score comments
+			continue
+		}
+
 		if comments[i].Score >=  minimumColourScore{
 			comments[i].Colour = ag.getColour()
 		}
+
+		commentsFiltered = append(commentsFiltered, comments[i])
 	}
 
 	fs := FrontmatterStruct{
@@ -151,7 +174,7 @@ func (ag *ArticleGenerator) generateArticle(
 	frontmatterTmpl := template.Must(template.New("frontmatter").Parse(TEMPLATE_FRONTMATTER))
 	var buf bytes.Buffer
 
-	err = frontmatterTmpl.Execute(&buf, fs)
+	err := frontmatterTmpl.Execute(&buf, fs)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate frontmatter template, %w", err)
 	}
@@ -160,10 +183,11 @@ func (ag *ArticleGenerator) generateArticle(
 		Title:           page.TranslatedTitle,
 		Url:             page.Url,
 		TemplateRefLink: TEMPLATE_REF_LINK,
-		Comments:        comments,
+		Comments:        commentsFiltered,
 	}
 
-	chunk := 10
+	chunk := common.GetEnvInt("comment_fold_chunk_num")
+
 	pageTmpl := template.Must(
 		template.New("page").Funcs(
 			template.FuncMap{
@@ -209,12 +233,8 @@ type ArticleStruct struct {
 }
 
 func formatCommentedAt(src string) string {
-	date, err := time.Parse(db.Rfc3339Milli, src)
-	if err != nil {
-		return fmt.Sprintf("%v", err)
-	}
-
-	formatted := date.Format("2006/01/02 15:04:05")
+	formatted := strings.ReplaceAll(src, "-", "/")
+	formatted = strings.ReplaceAll(formatted, "T", " ")
 
 	return formatted
 }

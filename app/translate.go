@@ -158,6 +158,8 @@ func translatePageAndComments(page *db.Page, comments []db.Comment) error {
 		}
 	}
 
+	page.Translated = true
+
 	return nil
 }
 
@@ -212,10 +214,12 @@ func translateCommentChunk(title string, comments []db.Comment, callAi external.
 	var result CommentsForTranslation
 
 	if err = json.Unmarshal([]byte(answer), &result); err != nil {
+		slog.Error("failed to unmarshal", slog.String("answer", answer))
 		return nil, fmt.Errorf("failed to unmarshal: %s\n %w\n", answer, err)
 	}
 
 	if len(result.Comments) != len(comments) {
+		slog.Error("Invalid number in answer", slog.String("answer", answer))
 		return nil, fmt.Errorf("Invalid number of comments: %d != %d, Origina json: %s", len(result.Comments), len(comments), answer)
 	}
 

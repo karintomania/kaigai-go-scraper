@@ -52,6 +52,22 @@ func (r *LinkRepository) Insert(link *Link) {
 	link.Id = int(id)
 }
 
+func (r *LinkRepository) DoesExternalIdExist(extId string) bool {
+	query := "SELECT count(*) FROM links WHERE ext_id = ?"
+
+	row := r.db.QueryRow(query, extId)
+
+	result := 0
+
+	err := row.Scan(&result)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return result > 0
+}
+
 func (r *LinkRepository) FindByDate(date string) []Link {
 	query := "SELECT * FROM links WHERE date = ? AND scraped = 0"
 
@@ -78,7 +94,6 @@ func (r *LinkRepository) FindByDate(date string) []Link {
 	}
 
 	return links
-
 }
 
 func (r *LinkRepository) CreateTable() {

@@ -13,7 +13,7 @@ func main() {
 	migrate := false
 	scrape := true
 
-	date := "2025-04-03"
+	date := "2025-04-01"
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout,
 		&slog.HandlerOptions{

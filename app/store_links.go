@@ -24,7 +24,7 @@ type JsonLink struct {
 	// Comments  int    `json:"comments"`
 }
 
-const TOP_LINK_NUM = 10
+const TOP_LINK_NUM = 2
 
 func StoreLinks(dateString string, linkRepository *db.LinkRepository) error {
 	slog.Info("Start storing links")
@@ -36,8 +36,10 @@ func StoreLinks(dateString string, linkRepository *db.LinkRepository) error {
 	links := getTopLinks(jsonLinks, TOP_LINK_NUM, dateString)
 
 	for _, link := range links {
-		linkRepository.Insert(&link)
-		slog.Info(fmt.Sprintf("Inserted link: %s\n", link.URL))
+		if !linkRepository.DoesExternalIdExist(link.ExtId) {
+			linkRepository.Insert(&link)
+			slog.Info(fmt.Sprintf("Inserted link: %s\n", link.URL))
+		}
 	}
 
 	return nil

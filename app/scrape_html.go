@@ -17,8 +17,8 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/external"
 )
 
-const MAX_COMMENTS_NUM = 100
-const MAX_REPLY_PER_COMMENT_NUM = 30
+const MAX_COMMENTS_NUM = 20
+const MAX_REPLY_PER_COMMENT_NUM = 2
 
 func scrapeHtml(
 	dateString string,
@@ -148,6 +148,9 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 			log.Fatalln(err)
 		}
 
+		commentedAtRaw := s.Find("span.age").AttrOr("title", "2025-01-01T01:02:03 1738909416")
+		commentedAt := strings.Split(commentedAtRaw, " ")[0]
+
 		// create comment struct
 		comment := db.Comment{
 			ExtCommentId: s.AttrOr("id", ""),
@@ -156,6 +159,7 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 			Content:      strings.TrimSpace(s.Find(".commtext").Text()),
 			Indent:       indent,
 			Reply:        reply,
+			CommentedAt: commentedAt,
 		}
 
 		comments = append(comments, comment)

@@ -18,7 +18,7 @@ import (
 type CallAI func(string) string
 
 // dogde the rate limit
-const GEMINI_SLEEP_SECONDS = 5
+const GEMINI_SLEEP_SECONDS = 4
 
 type geminiResponse struct {
 	Candidates []struct {
@@ -54,8 +54,6 @@ func CallGemini(prompt string) string {
 	answer := gr.getText()
 
 	answer = sanitizeResponse(answer)
-
-	slog.Info("gemini answer", slog.String("answer", answer))
 
 	return answer
 }

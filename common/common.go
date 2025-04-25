@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -20,6 +21,17 @@ func GetEnv(key string) string {
 		panic(fmt.Sprintf("Environment variable %s not set", key))
 	}
 	return val
+}
+
+func GetEnvInt(key string) int {
+	val := GetEnv(key)
+
+	intVal, err := strconv.Atoi(val)
+	if err != nil {
+		panic(fmt.Sprintf("Environment variable %s is not an integer: %v", key, err))
+	}
+
+	return intVal
 }
 
 func MockEnv(key, v string) {

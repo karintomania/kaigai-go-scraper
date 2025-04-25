@@ -21,7 +21,7 @@ func TestScrapeHtml(t *testing.T) {
                     <td><a class="togg clicky" n="100"></a></td>
                     <td>
                         <a class="hnuser">user1</a>
-                        <span class="age" title="2025-02-07T06:23:36 1738909416">
+                        <span class="age" title="2025-01-02T03:04:05 1738909416">
                         <div class="commtext">Test comment 1</div>
                     </td>
                 </tr>
@@ -30,7 +30,7 @@ func TestScrapeHtml(t *testing.T) {
                     <td><a class="togg clicky" n="50"></a></td>
                     <td>
                         <a class="hnuser">user2</a>
-                        <span class="age" title="2024-03-08T07:24:37 1738909416">
+                        <span class="age" title="2024-05-19T04:06:08 1738909416">
                         <div class="commtext">Test comment 2</div>
                     </td>
                 </tr>
@@ -60,6 +60,7 @@ func TestScrapeHtml(t *testing.T) {
 			Content:      "Test comment 1",
 			Indent:       0,
 			Reply:        100,
+			CommentedAt:  "2025-01-02T03:04:05",
 		},
 		{
 			ExtCommentId: "456",
@@ -68,6 +69,8 @@ func TestScrapeHtml(t *testing.T) {
 			Content:      "Test comment 2",
 			Indent:       1,
 			Reply:        50,
+			CommentedAt:  "2024-05-19T04:06:08",
+			
 		},
 	} {
 
