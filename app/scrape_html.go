@@ -24,7 +24,6 @@ func scrapeHtml(
 	pageRepository *db.PageRepository,
 	commentRepository *db.CommentRepository,
 ) error {
-
 	if err := downloadHtmlsAsync(dateString, linkRepository, pageRepository); err != nil {
 		return err
 	}
@@ -32,6 +31,8 @@ func scrapeHtml(
 	pages := pageRepository.FindByDate(dateString)
 
 	for _, page := range pages {
+		slog.Info("Scraping HTML", "title", page.Title, "page id", page.Id)
+
 		_, comments := getPageAndComments(&page)
 		pageRepository.Update(&page)
 
@@ -60,6 +61,8 @@ func downloadHtmlsAsync(
 	var errMutex sync.Mutex
 
 	for _, link := range links {
+		slog.Info("Downloading HTML", "title", link.Title, "link", link.URL)
+
 		wg.Add(1)
 		time.Sleep(1 * time.Second)
 

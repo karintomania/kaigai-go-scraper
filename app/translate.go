@@ -107,7 +107,7 @@ func translate(
 		comments := commentRepository.FindByPageId(page.Id)
 
 		if err := translatePageAndComments(&page, comments); err != nil {
-			return nil
+			return err
 		}
 
 		// update page, comments
