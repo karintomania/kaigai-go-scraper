@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/karintomania/kaigai-go-scraper/app"
 	"github.com/karintomania/kaigai-go-scraper/cmd"
@@ -10,10 +12,26 @@ import (
 )
 
 func main() {
-	migrate := false
-	scrape := true
+	var (
+		mode        string
+		date        string
+		toStoreLink bool
+		toScrape    bool
+		toTranslate bool
+		toGenerate  bool
+		toPublish   bool
+	)
 
-	date := "2025-04-01"
+	defaultDate := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+
+	flag.StringVar(&mode, "mode", "scrape", "Mode of operation: migrate or scrape")
+	flag.StringVar(&date, "date", defaultDate, "Date to scrape (YYYY-MM-DD)")
+	flag.BoolVar(&toStoreLink, "l", false, "Flag to store links")
+	flag.BoolVar(&toScrape, "s", false, "Flag to scrape")
+	flag.BoolVar(&toTranslate, "t", false, "Flag to translate")
+	flag.BoolVar(&toGenerate, "g", false, "Flag to generate")
+	flag.BoolVar(&toPublish, "p", false, "Flag to generate")
+	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout,
 		&slog.HandlerOptions{
@@ -22,11 +40,11 @@ func main() {
 
 	slog.SetDefault(logger)
 
-	if migrate {
+	if mode == "migrate" {
 		cmd.MigrateCmd()
 	}
 
-	if scrape {
-		app.Scrape(date)
+	if mode == "scrape" {
+		app.Scrape(date, toStoreLink, toScrape, toTranslate, toGenerate, toPublish)
 	}
 }

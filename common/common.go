@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 
@@ -39,4 +40,13 @@ func MockEnv(key, v string) {
 		mock = make(map[string]string)
 	}
 	mock[key] = v
+}
+
+func SetLogger() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout,
+		&slog.HandlerOptions{
+			AddSource: true,
+		}))
+
+	slog.SetDefault(logger)
 }

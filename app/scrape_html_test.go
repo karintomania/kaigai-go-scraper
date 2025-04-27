@@ -70,7 +70,6 @@ func TestScrapeHtml(t *testing.T) {
 			Indent:       1,
 			Reply:        50,
 			CommentedAt:  "2024-05-19T04:06:08",
-			
 		},
 	} {
 

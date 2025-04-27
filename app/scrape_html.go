@@ -160,7 +160,7 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 			Content:      strings.TrimSpace(s.Find(".commtext").Text()),
 			Indent:       indent,
 			Reply:        reply,
-			CommentedAt: commentedAt,
+			CommentedAt:  commentedAt,
 		}
 
 		comments = append(comments, comment)

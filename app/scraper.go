@@ -2,23 +2,26 @@ package app
 
 import (
 	"log"
+	"log/slog"
 
 	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
-func Scrape(date string) {
+func Scrape(
+	date string,
+	toStoreLink bool,
+	toScrape bool,
+	toTranslate bool,
+	toGenerate bool,
+	toPublish bool,
+) {
 	dbConn := db.GetDbConnection(common.GetEnv("db_path"))
 	defer dbConn.Close()
 
 	linkRepository := db.NewLinkRepository(dbConn)
 	pageRepository := db.NewPageRepository(dbConn)
 	commentRepository := db.NewCommentRepository(dbConn)
-
-	toStoreLink := false
-	toScrape := true
-	toTranslate := true
-	toGenerate := true
 
 	if toStoreLink {
 		if err := StoreLinks(date, linkRepository); err != nil {
@@ -52,4 +55,14 @@ func Scrape(date string) {
 			log.Panicf("Error translating: %v", err)
 		}
 	}
+
+	if toPublish {
+		p := NewPublish(pageRepository)
+
+		if err := p.run(date); err != nil {
+			log.Panicf("Error publishing: %v", err)
+		}
+	}
+
+	slog.Info("Scraping completed")
 }

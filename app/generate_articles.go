@@ -47,9 +47,9 @@ featureimage = '{{.Image}}'
 )
 
 type ArticleGenerator struct {
-	pr       *db.PageRepository
-	cr       *db.CommentRepository
-	getImage func() string
+	pr        *db.PageRepository
+	cr        *db.CommentRepository
+	getImage  func() string
 	getColour func() string
 }
 
@@ -58,9 +58,9 @@ func NewArticleGenerator(
 	cr *db.CommentRepository,
 ) *ArticleGenerator {
 	ag := &ArticleGenerator{
-		pr:       pr,
-		cr:       cr,
-		getImage: defaultGetImage,
+		pr:        pr,
+		cr:        cr,
+		getImage:  defaultGetImage,
 		getColour: defaultGetColour,
 	}
 
@@ -74,9 +74,9 @@ func NewTestArticleGenerator(
 	getColour func() string,
 ) *ArticleGenerator {
 	ag := &ArticleGenerator{
-		pr:       pr,
-		cr:       cr,
-		getImage: getImage,
+		pr:        pr,
+		cr:        cr,
+		getImage:  getImage,
 		getColour: getColour,
 	}
 
@@ -97,11 +97,14 @@ func (ag *ArticleGenerator) generateArticles(dateStr string) error {
 		comments := ag.cr.FindByPageId(page.Id)
 
 		article, err := ag.generateArticle(dateStr, &page, comments)
-		if err != nil { return err }
-
+		if err != nil {
+			return err
+		}
 
 		file, err := ag.getPaths(dateStr, page.Slug)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		slog.Info("generating article", slog.String("path", file.Name()))
 
@@ -117,14 +120,14 @@ func (ag *ArticleGenerator) getPaths(dateStr, slug string) (*os.File, error) {
 	folderName := fmt.Sprintf("%s_%s",
 		strings.ReplaceAll(dateStr, "-", "_"),
 		slug,
-		)
+	)
 
 	outputFolder := fmt.Sprintf(
 		"%s/%s/%s",
 		common.GetEnv("output_article_folder"),
 		dateStr,
 		folderName,
-		)
+	)
 
 	if err := os.MkdirAll(outputFolder, 0774); err != nil {
 		return nil, err
@@ -133,11 +136,12 @@ func (ag *ArticleGenerator) getPaths(dateStr, slug string) (*os.File, error) {
 	outputFile := fmt.Sprintf("%s/index.md", outputFolder)
 
 	file, err := os.Create(outputFile)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 
 	return file, nil
 }
-
 
 func (ag *ArticleGenerator) generateArticle(
 	dateStr string,
@@ -149,14 +153,13 @@ func (ag *ArticleGenerator) generateArticle(
 	lowestScore := common.GetEnvInt("lowest_comment_score")
 	minimumColourScore := common.GetEnvInt("minimum_colour_score")
 
-
 	for i, _ := range comments {
 		if comments[i].Score < lowestScore {
 			// skip low score comments
 			continue
 		}
 
-		if comments[i].Score >=  minimumColourScore{
+		if comments[i].Score >= minimumColourScore {
 			comments[i].Colour = ag.getColour()
 		}
 
@@ -200,7 +203,7 @@ func (ag *ArticleGenerator) generateArticle(
 				"toCloseDetails": func(i int) bool {
 					// if i > chunk, show close detail tag for
 					// the last comment of the chunk or the last comment
-					return (i%chunk == chunk-1 || i == len(comments)-1) && i > chunk
+					return (i%chunk == chunk-1 || i == len(commentsFiltered)-1) && i > chunk
 				},
 				"formatCommentedAt": func(str string) string {
 					return formatCommentedAt(str)
