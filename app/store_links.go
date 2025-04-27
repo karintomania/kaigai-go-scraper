@@ -2,10 +2,11 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
+	"io"
 	"log/slog"
 	"sort"
 
+	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
 	"github.com/karintomania/kaigai-go-scraper/external"
 )
@@ -24,29 +25,45 @@ type JsonLink struct {
 	// Comments  int    `json:"comments"`
 }
 
-const TOP_LINK_NUM = 2
+type StoreLinks struct {
+	lr             *db.LinkRepository
+	callHackerNews func(string) io.ReadCloser
+}
 
-func StoreLinks(dateString string, linkRepository *db.LinkRepository) error {
+func NewStoreLinks(lr *db.LinkRepository) *StoreLinks {
+	return &StoreLinks{
+		lr:             lr,
+		callHackerNews: external.CallHckrNews,
+	}
+}
+
+func NewTestStoreLinks(lr *db.LinkRepository, callHckrNews func(string) io.ReadCloser) *StoreLinks {
+	return &StoreLinks{
+		lr:             lr,
+		callHackerNews: callHckrNews,
+	}
+}
+
+func (sl *StoreLinks) run(dateString string) error {
 	slog.Info("Start storing links")
-	jsonLinks, err := callHckrNewsApi(dateString)
+
+	topLinkNum := common.GetEnvInt("top_link_num")
+
+	jsonLinks, err := sl.callHckrNewsApi(dateString)
 	if err != nil {
 		return err
 	}
 
-	links := getTopLinks(jsonLinks, TOP_LINK_NUM, dateString)
+	links := sl.getTopLinks(jsonLinks, topLinkNum, dateString)
 
-	for _, link := range links {
-		if !linkRepository.DoesExternalIdExist(link.ExtId) {
-			linkRepository.Insert(&link)
-			slog.Info(fmt.Sprintf("Inserted link: %s\n", link.URL))
-		}
-	}
+	sl.storeTopLinks(links)
 
 	return nil
 }
 
-func callHckrNewsApi(date string) ([]JsonLink, error) {
-	body := external.CallHckrNews(date)
+func (sl *StoreLinks) callHckrNewsApi(date string) ([]JsonLink, error) {
+	body := sl.callHackerNews(date)
+
 	defer body.Close()
 
 	var links []JsonLink
@@ -58,7 +75,7 @@ func callHckrNewsApi(date string) ([]JsonLink, error) {
 }
 
 // get top n links by points. Convert LinkJson to Link
-func getTopLinks(linkJsons []JsonLink, n int, dateString string) []db.Link {
+func (sl *StoreLinks) getTopLinks(linkJsons []JsonLink, n int, dateString string) []db.Link {
 	sort.Slice(linkJsons, func(i, j int) bool {
 		return linkJsons[i].Points > linkJsons[j].Points
 	})
@@ -82,4 +99,13 @@ func getTopLinks(linkJsons []JsonLink, n int, dateString string) []db.Link {
 	}
 
 	return links
+}
+
+func (sl *StoreLinks) storeTopLinks(links []db.Link) {
+	for _, link := range links {
+		if !sl.lr.DoesExternalIdExist(link.ExtId) {
+			sl.lr.Insert(&link)
+			slog.Info("Inserted", "link", link.URL, "title", link.Title)
+		}
+	}
 }

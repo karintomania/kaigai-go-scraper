@@ -24,7 +24,9 @@ func Scrape(
 	commentRepository := db.NewCommentRepository(dbConn)
 
 	if toStoreLink {
-		if err := StoreLinks(date, linkRepository); err != nil {
+		sl := NewStoreLinks(linkRepository)
+
+		if err := sl.run(date); err != nil {
 			log.Panicf("Error storing links: %v", err)
 		}
 	}

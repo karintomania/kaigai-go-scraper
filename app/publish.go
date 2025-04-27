@@ -35,6 +35,7 @@ func NewPublishWithRunGitCommand(
 }
 
 func (p *Publish) run(dateStr string) error {
+	slog.Info("Publishing articles")
 	srcRoot := common.GetEnv("output_article_folder")
 	destRoot := common.GetEnv("article_destination")
 

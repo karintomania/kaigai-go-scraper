@@ -20,18 +20,28 @@ func main() {
 		toTranslate bool
 		toGenerate  bool
 		toPublish   bool
+		toRunAll    bool
 	)
 
 	defaultDate := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
 
 	flag.StringVar(&mode, "mode", "scrape", "Mode of operation: migrate or scrape")
 	flag.StringVar(&date, "date", defaultDate, "Date to scrape (YYYY-MM-DD)")
+	flag.BoolVar(&toRunAll, "run-all", false, "Alias for -l -s -t -g -p")
 	flag.BoolVar(&toStoreLink, "l", false, "Flag to store links")
 	flag.BoolVar(&toScrape, "s", false, "Flag to scrape")
 	flag.BoolVar(&toTranslate, "t", false, "Flag to translate")
 	flag.BoolVar(&toGenerate, "g", false, "Flag to generate")
 	flag.BoolVar(&toPublish, "p", false, "Flag to generate")
 	flag.Parse()
+
+	if toRunAll {
+		toStoreLink = true
+		toScrape = true
+		toTranslate = true
+		toGenerate = true
+		toPublish = true
+	}
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout,
 		&slog.HandlerOptions{
