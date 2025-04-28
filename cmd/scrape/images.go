@@ -1,4 +1,4 @@
-package app
+package scrape
 
 import "math/rand"
 

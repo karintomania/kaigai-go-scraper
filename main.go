@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/karintomania/kaigai-go-scraper/app"
 	"github.com/karintomania/kaigai-go-scraper/cmd"
+	"github.com/karintomania/kaigai-go-scraper/cmd/scrape"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -55,6 +55,6 @@ func main() {
 	}
 
 	if mode == "scrape" {
-		app.Scrape(date, toStoreLink, toScrape, toTranslate, toGenerate, toPublish)
+		scrape.Scrape(date, toStoreLink, toScrape, toTranslate, toGenerate, toPublish)
 	}
 }

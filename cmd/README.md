@@ -1,7 +1,7 @@
 # Structure
-This folder contains endpoints for these app.
+This folder contains endpoints for these commands.
 
-1. scraper.go: endpoint for scraper
+1. scrape/scraper.go: endpoint for scraper
   - store_links.go: get links for the page 
   - scrape_html.go: download HTML and scrape info
   - translate.go: translation via LLM
@@ -9,3 +9,5 @@ This folder contains endpoints for these app.
   - publish.go: run shell script to publish the articles
 
 2. tweet.go: endpoint for tweet automation
+
+3. migrate.go: DB migration
