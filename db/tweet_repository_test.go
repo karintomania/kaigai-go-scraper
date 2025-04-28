@@ -12,7 +12,7 @@ func TestTweetRepository(t *testing.T) {
 
 	tr := NewTweetRepository(db)
 
-	tr.CreateTable(&Tweet{})
+	tr.CreateTable()
 
 	t.Run("Insert", func(t *testing.T) {
 		tr.Truncate()

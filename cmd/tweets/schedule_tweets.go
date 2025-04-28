@@ -15,7 +15,7 @@ const (
 	TWEET_TEMPLATE = `「{{.Title}}」に対する海外の反応をまとめました。
 #海外の反応 #テックニュース
 
-https://www.kaigai-tech-matome.com/posts/{{.YearMonth}}/{{.Slug}}/`
+{{.PostUrl}}/{{.YearMonth}}/{{.Slug}}/`
 	date_str_format = "2006-01-02"
 )
 
@@ -51,14 +51,17 @@ func (cmd *ScheduleTweetsCmd) createTweetContent(page *db.Page) string {
 	var buf bytes.Buffer
 
 	yearMonth := strings.ReplaceAll(page.Date[:7], "-", "_")
+
 	err := tmpl.Execute(&buf, struct {
 		Title     string
 		YearMonth string
 		Slug      string
+		PostUrl   string
 	}{
 		page.Title,
 		yearMonth,
 		page.Slug,
+		"https://www.kaigai-tech-matome.com/posts",
 	})
 
 	if err != nil {
@@ -70,7 +73,7 @@ func (cmd *ScheduleTweetsCmd) createTweetContent(page *db.Page) string {
 }
 
 func (cmd *ScheduleTweetsCmd) generateScheduleDate(startDateStr string) string {
-	date, err := time.Parse(startDateStr, date_str_format)
+	date, err := time.Parse(date_str_format, startDateStr)
 	if err != nil {
 		panic(err)
 	}

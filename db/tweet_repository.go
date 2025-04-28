@@ -23,6 +23,32 @@ func NewTweetRepository(db *sql.DB) *TweetRepository {
 	return &TweetRepository{db: db}
 }
 
+func (r *TweetRepository) FindById(id int) *Tweet {
+	query := "SELECT * FROM tweets WHERE id = ?"
+
+	row := r.db.QueryRow(query, id)
+
+	var tweet Tweet
+	err := row.Scan(
+		&tweet.Id,
+		&tweet.PageId,
+		&tweet.Date,
+		&tweet.Content,
+		&tweet.ScheduledAt,
+		&tweet.Published,
+		&tweet.CreatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		log.Panicln(err)
+	}
+
+	return &tweet
+}
+
 func (r *TweetRepository) Insert(tweet *Tweet) {
 	cmd := `INSERT INTO tweets (page_id, date, content, scheduled_at, published) VALUES (?, ?, ?, ?, ?)`
 
@@ -64,7 +90,7 @@ func (r *TweetRepository) Update(tweet *Tweet) {
 	}
 }
 
-func (r *TweetRepository) CreateTable(tweet *Tweet) {
+func (r *TweetRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS tweets(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 page_id INTEGER NOT NULL,
