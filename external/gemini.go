@@ -15,8 +15,9 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/common"
 )
 
-type CallAI func(string) string
+type CallAI func(string) (string, error)
 
+// TODO: move this to .env
 // dogde the rate limit
 const GEMINI_SLEEP_SECONDS = 4
 
@@ -40,25 +41,28 @@ func (gr *geminiResponse) getText() string {
 	return gr.Candidates[0].Content.Parts[0].Text
 }
 
-func CallGemini(prompt string) string {
+func CallGemini(prompt string) (string, error) {
 	time.Sleep(GEMINI_SLEEP_SECONDS * time.Second)
 
-	data := geminiHttpCall(prompt)
+	data, err := geminiHttpCall(prompt)
+	if err != nil {
+		return "", err
+	}
 
 	var gr geminiResponse
 
 	if err := json.Unmarshal(data, &gr); err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	answer := gr.getText()
 
 	answer = sanitizeResponse(answer)
 
-	return answer
+	return answer, nil
 }
 
-func geminiHttpCall(prompt string) []byte {
+func geminiHttpCall(prompt string) ([]byte, error) {
 	url := fmt.Sprintf(
 		common.GetEnv("gemini_url"),
 		common.GetEnv("gemini_model"),
@@ -72,16 +76,16 @@ func geminiHttpCall(prompt string) []byte {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 
 	if err != nil {
-		slog.Error("failed to create request to gemini", slog.Any("err", err))
-		panic(err)
+		slog.Error("failed to create request to gemini", "err", err)
+		return nil, err
 	}
 
 	client := getHttpClient()
 
 	resp, err := client.Do(req)
 	if err != nil {
-		slog.Error("http call to gemini failed", slog.Any("err", err))
-		panic(err)
+		slog.Error("http call to gemini failed", "err", err)
+		return nil, err
 	}
 
 	b := resp.Body
@@ -89,26 +93,29 @@ func geminiHttpCall(prompt string) []byte {
 
 	responseBytes, err := io.ReadAll(b)
 	if err != nil {
-		slog.Error("failed to read gemini response body", slog.Any("err", err))
-		panic(err)
+		slog.Error("failed to read gemini response body", "err", err)
+		return nil, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		slog.Error("gemini returned error status", slog.String("status", resp.Status), slog.String("body", string(responseBytes)))
-		panic(resp.Status)
+		slog.Error("gemini returned error status", "status", resp.Status, "body", string(responseBytes))
+		return nil, fmt.Errorf("gemini returned error status: %s", resp.Status)
 	}
 
-	return responseBytes
+	return responseBytes, nil
 }
 
+// Use json.Marshal to make the string json compatible
 func escapeStringForJSON(s string) string {
-	escapedBytes, err := json.Marshal([]string{s})
+	escapedBytes, err := json.Marshal(s)
 	if err != nil {
-		log.Panic(err)
+		slog.Error("failed to escape the string", "s", s)
+		panic(err)
 	}
-	// Remove [" and "]
-	escapedString := string(escapedBytes[2 : len(escapedBytes)-2])
 
+	escapedString := string(escapedBytes)
+	// Remove surrounding quotes
+	escapedString = strings.Trim(escapedString, "\"")
 	return escapedString
 }
 

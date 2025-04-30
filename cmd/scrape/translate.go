@@ -72,7 +72,25 @@ jsonのscoreはそれぞれのコメントを以下のルールに従って採�
 """`
 )
 
-type TitleTranslatino struct {
+type TranslatePage struct {
+	pr     *db.PageRepository
+	cr     *db.CommentRepository
+	callAi external.CallAI
+}
+
+func NewTranslatePage(
+	pageRepository *db.PageRepository,
+	commentRepository *db.CommentRepository,
+	callAi external.CallAI,
+) *TranslatePage {
+	return &TranslatePage{
+		pr:     pageRepository,
+		cr:     commentRepository,
+		callAi: callAi,
+	}
+}
+
+type TitleTranslation struct {
 	Title string   `json:"title"`
 	Tags  []string `json:"tags"`
 }
@@ -95,76 +113,75 @@ func NewCommentForTranslation(c db.Comment) CommentForTranslation {
 	}
 }
 
-func translate(
+func (tp *TranslatePage) run(
 	dateString string,
-	pageRepository *db.PageRepository,
-	commentRepository *db.CommentRepository,
 ) error {
-	pages := pageRepository.FindUntranslatedByDate(dateString)
+	pages := tp.pr.FindUntranslatedByDate(dateString)
 
 	for _, page := range pages {
 		slog.Info("Translating page", slog.Int("page id", page.Id), slog.String("title", page.Title))
 
-		comments := commentRepository.FindByPageId(page.Id)
+		comments := tp.cr.FindByPageId(page.Id)
 
-		if err := translatePageAndComments(&page, comments); err != nil {
+		if err := tp.translatePageAndComments(&page, comments); err != nil {
 			return err
 		}
 
 		// update page, comments
-		pageRepository.Update(&page)
+		tp.pr.Update(&page)
 
 		for _, comment := range comments {
-			commentRepository.Update(&comment)
+			tp.cr.Update(&comment)
 		}
 	}
 
 	return nil
 }
 
-func translatePageAndComments(page *db.Page, comments []db.Comment) error {
+func (tp *TranslatePage) translatePageAndComments(page *db.Page, comments []db.Comment) error {
 	// translate title
-	translateTitle(page, comments, external.CallGemini)
+	err := tp.retry(func() error {
+		return tp.translateTitle(page, comments)
+	}, MAX_RETRIES)
+	if err != nil {
+		return err
+	}
 
 	// translate comments
 	for i := 0; i < len(comments); i = i + COMMENTS_CHUNK_NUM {
 		slog.Info("Translating comment chunk", slog.Int("start index", i))
 
-		var translatedCommentsChunk []db.Comment
-		var err error
+		commentsChunk := comments[i:min(i+COMMENTS_CHUNK_NUM, len(comments))]
 
-	Retry:
-		for retry := 0; retry < MAX_RETRIES; retry++ {
-			translatedCommentsChunk, err = translateCommentChunk(
+		err = tp.retry(func() error {
+			translatedCommentsChunk, err := tp.translateCommentChunk(
 				page.TranslatedTitle,
-				comments[i:min(i+COMMENTS_CHUNK_NUM, len(comments))],
-				external.CallGemini,
+				commentsChunk,
 			)
-
 			if err != nil {
-				slog.Error("retry", slog.Int("retry", retry), slog.Any("err", err))
-				continue Retry
-			} else {
-				break Retry
+				return err
 			}
-		}
 
-		if err != nil { // failed all retries
+			// update comments
+			for j, tc := range translatedCommentsChunk {
+				comments[i+j] = tc
+			}
+
+			return nil
+		}, MAX_RETRIES)
+
+		if err != nil {
+			slog.Error("failed to translate comment chunk", "err", err)
 			return err
 		}
 
-		// update the comments with traslated one
-		for j, tc := range translatedCommentsChunk {
-			comments[i+j] = tc
-		}
+		page.Translated = true
 	}
-
-	page.Translated = true
 
 	return nil
 }
 
-func translateTitle(page *db.Page, comments []db.Comment, callAi external.CallAI) {
+func (tp *TranslatePage) translateTitle(page *db.Page, comments []db.Comment) error {
 	slog.Info("Translating page title", slog.String("title", page.Title))
 
 	commentsForContext := comments[:min(COMMENTS_CONTEXT_NUM, len(comments))]
@@ -179,19 +196,25 @@ func translateTitle(page *db.Page, comments []db.Comment, callAi external.CallAI
 
 	prompt := fmt.Sprintf(PROMPT_TITLE, page.Title, commentsStr)
 
-	answer := callAi(prompt)
+	answer, err := tp.callAi(prompt)
+	if err != nil {
+		return err
+	}
 
-	var titleTranslation TitleTranslatino
+	var titleTranslation TitleTranslation
 	if err := json.Unmarshal([]byte(answer), &titleTranslation); err != nil {
-		panic(err)
+		slog.Error("failed to unmarshal", "answer", answer)
+		return err
 	}
 
 	page.TranslatedTitle = titleTranslation.Title
 
 	page.Tags = strings.Join(titleTranslation.Tags, ",")
+
+	return nil
 }
 
-func translateCommentChunk(title string, comments []db.Comment, callAi external.CallAI) ([]db.Comment, error) {
+func (tp *TranslatePage) translateCommentChunk(title string, comments []db.Comment) ([]db.Comment, error) {
 	commentsForTranslation := make([]CommentForTranslation, 0)
 	for _, c := range comments {
 		commentsForTranslation = append(
@@ -210,17 +233,20 @@ func translateCommentChunk(title string, comments []db.Comment, callAi external.
 
 	prompt := fmt.Sprintf(PROMPT_COMMENT, title, string(jsonComments))
 
-	answer := callAi(prompt)
+	answer, err := tp.callAi(prompt)
+	if err != nil {
+		return nil, err
+	}
 
 	var result CommentsForTranslation
 
 	if err = json.Unmarshal([]byte(answer), &result); err != nil {
-		slog.Error("failed to unmarshal", slog.String("answer", answer))
+		slog.Error("failed to unmarshal", "answer", answer)
 		return nil, fmt.Errorf("failed to unmarshal: %s\n %w\n", answer, err)
 	}
 
 	if len(result.Comments) != len(comments) {
-		slog.Error("Invalid number in answer", slog.String("answer", answer))
+		slog.Error("Invalid number in answer", "answer", answer)
 		return nil, fmt.Errorf("Invalid number of comments: %d != %d, Origina json: %s", len(result.Comments), len(comments), answer)
 	}
 
@@ -248,4 +274,18 @@ func sanitizeTranslatedComment(c string) string {
 	c = strings.ReplaceAll(c, `$$br$$`, `<br>`)
 
 	return c
+}
+
+func (tp *TranslatePage) retry(fn func() error, maxRetries int) error {
+	for tried := 0; tried < maxRetries; tried++ {
+		err := fn()
+		if err != nil {
+			slog.Error("running function failed.", "tried", tried+1, "err", err)
+			continue
+		} else {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("failed to run function after tried %d times", maxRetries)
 }

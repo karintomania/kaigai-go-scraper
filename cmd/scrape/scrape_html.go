@@ -138,7 +138,7 @@ func (s *ScrapeHtml) scrapePages(dateStr string) error {
 
 		for _, comment := range selectedComments {
 			// check if the comment already exists
-			if s.cr.DoesExtIdExist(page.Id, comment.ExtCommentId) {
+			if !s.cr.DoesExtIdExist(page.Id, comment.ExtCommentId) {
 				s.cr.Insert(&comment)
 			}
 		}

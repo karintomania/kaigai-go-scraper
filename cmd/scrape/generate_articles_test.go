@@ -58,7 +58,7 @@ func TestGenerateArticle(t *testing.T) {
 		CommentedAt:       fmt.Sprintf("2025-12-28T00:01:02"),
 	})
 
-	ag := NewTestArticleGenerator(
+	ag := NewTestGenerateArticle(
 		pr,
 		cr,
 		mockGetImage,

@@ -46,18 +46,18 @@ featureimage = '{{.Image}}'
 	TEMPLATE_REF_LINK = `{{% ref "/posts/" %}}`
 )
 
-type ArticleGenerator struct {
+type GenerateArticle struct {
 	pr        *db.PageRepository
 	cr        *db.CommentRepository
 	getImage  func() string
 	getColour func() string
 }
 
-func NewArticleGenerator(
+func NewGenerateArticle(
 	pr *db.PageRepository,
 	cr *db.CommentRepository,
-) *ArticleGenerator {
-	ag := &ArticleGenerator{
+) *GenerateArticle {
+	ag := &GenerateArticle{
 		pr:        pr,
 		cr:        cr,
 		getImage:  defaultGetImage,
@@ -67,13 +67,13 @@ func NewArticleGenerator(
 	return ag
 }
 
-func NewTestArticleGenerator(
+func NewTestGenerateArticle(
 	pr *db.PageRepository,
 	cr *db.CommentRepository,
 	getImage func() string,
 	getColour func() string,
-) *ArticleGenerator {
-	ag := &ArticleGenerator{
+) *GenerateArticle {
+	ag := &GenerateArticle{
 		pr:        pr,
 		cr:        cr,
 		getImage:  getImage,
@@ -89,7 +89,7 @@ func defaultGetColour() string {
 	return colours[rand.Intn(len(colours))]
 }
 
-func (ag *ArticleGenerator) generateArticles(dateStr string) error {
+func (ag *GenerateArticle) run(dateStr string) error {
 
 	pages := ag.pr.FindByDate(dateStr)
 
@@ -116,7 +116,7 @@ func (ag *ArticleGenerator) generateArticles(dateStr string) error {
 	return nil
 }
 
-func (ag *ArticleGenerator) getPaths(dateStr, slug string) (*os.File, error) {
+func (ag *GenerateArticle) getPaths(dateStr, slug string) (*os.File, error) {
 	folderName := fmt.Sprintf("%s_%s",
 		strings.ReplaceAll(dateStr, "-", "_"),
 		slug,
@@ -143,7 +143,7 @@ func (ag *ArticleGenerator) getPaths(dateStr, slug string) (*os.File, error) {
 	return file, nil
 }
 
-func (ag *ArticleGenerator) generateArticle(
+func (ag *GenerateArticle) generateArticle(
 	dateStr string,
 	page *db.Page,
 	comments []db.Comment,

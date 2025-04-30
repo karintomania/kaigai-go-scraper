@@ -6,6 +6,7 @@ import (
 
 	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
+	"github.com/karintomania/kaigai-go-scraper/external"
 )
 
 func Scrape(
@@ -40,18 +41,17 @@ func Scrape(
 	}
 
 	if toTranslate {
-		if err := translate(
-			date,
-			pageRepository,
-			commentRepository); err != nil {
+		tp := NewTranslatePage(pageRepository, commentRepository, external.CallGemini)
+
+		if err := tp.run(date); err != nil {
 			log.Panicf("Error translating: %v", err)
 		}
 	}
 
 	if toGenerate {
-		ag := NewArticleGenerator(pageRepository, commentRepository)
+		ag := NewGenerateArticle(pageRepository, commentRepository)
 
-		if err := ag.generateArticles(date); err != nil {
+		if err := ag.run(date); err != nil {
 			log.Panicf("Error translating: %v", err)
 		}
 	}
