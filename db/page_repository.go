@@ -143,21 +143,21 @@ func (r *PageRepository) scan(rows *sql.Rows) []Page {
 
 func (r *PageRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS pages(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-ext_id STRING NOT NULL,
-date STRING NOT NULL,
-html STRING NOT NULL,
-title STRING,
-translated_title STRING,
-slug STRING,
-url STRING NOT NULL UNIQUE,
-ref_url STRING,
-tags STRING,
-translated BOOLEAN NOT NULL DEFAULT 0,
-published BOOLEAN NOT NULL DEFAULT 0,
-created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
-CREATE INDEX idx_pages_date ON pages(date);
-	)`
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	ext_id STRING NOT NULL,
+	date STRING NOT NULL,
+	html STRING NOT NULL,
+	title STRING,
+	translated_title STRING,
+	slug STRING,
+	url STRING NOT NULL UNIQUE,
+	ref_url STRING,
+	tags STRING,
+	translated BOOLEAN NOT NULL DEFAULT 0,
+	published BOOLEAN NOT NULL DEFAULT 0,
+	created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
+);
+CREATE INDEX idx_pages_date ON pages(date);`
 
 	_, err := r.db.Exec(cmd)
 

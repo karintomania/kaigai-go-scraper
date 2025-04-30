@@ -3,10 +3,13 @@ package db
 import (
 	"testing"
 
+	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCommentRepository(t *testing.T) {
+	common.SetLogger()
+
 	db, cleanup := getTestEmptyDbConnection()
 	defer cleanup()
 
@@ -99,5 +102,19 @@ func TestCommentRepository(t *testing.T) {
 		require.Equal(t, updatedComment.Reply, updated.Reply)
 		require.Equal(t, updatedComment.Colour, updated.Colour)
 		require.Equal(t, updatedComment.Score, updated.Score)
+	})
+
+	t.Run("DoesExtIdExist", func(t *testing.T) {
+		cr.Truncate()
+
+		// Insert initial comment
+		comment := Comment{
+			ExtCommentId: "cmt_1",
+			PageId:       1,
+		}
+		cr.Insert(&comment)
+
+		require.True(t, cr.DoesExtIdExist(1, "cmt_1"))
+		require.False(t, cr.DoesExtIdExist(1, "cmt_2"))
 	})
 }

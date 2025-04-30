@@ -92,15 +92,15 @@ func (r *TweetRepository) Update(tweet *Tweet) {
 
 func (r *TweetRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS tweets(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-page_id INTEGER NOT NULL,
-date STRING NOT NULL,
-content STRING NOT NULL,
-scheduled_at STRING NOT NULL,
-published BOOLEAN NOT NULL DEFAULT 0,
-created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	page_id INTEGER NOT NULL,
+	date STRING NOT NULL,
+	content STRING NOT NULL,
+	scheduled_at STRING NOT NULL,
+	published BOOLEAN NOT NULL DEFAULT 0,
+	created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
 );
-CREATE INDEX IF NOT EXISTS idx_scheduled_at ON tweets(scheduled_at)`
+CREATE INDEX IF NOT EXISTS idx_tweets_scheduled_at ON tweets(scheduled_at);`
 
 	_, err := r.db.Exec(cmd)
 
@@ -122,6 +122,10 @@ func (r *TweetRepository) FindUnpublishedByScheduledDate(dateBy string) []Tweet 
 
 	defer rows.Close()
 
+	return r.scan(rows)
+}
+
+func (r *TweetRepository) scan(rows *sql.Rows) []Tweet {
 	tweets := make([]Tweet, 0)
 
 	for rows.Next() {

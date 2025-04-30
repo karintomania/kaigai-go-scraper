@@ -125,6 +125,21 @@ func (r *CommentRepository) FindByPageId(pageId int) []Comment {
 	return comments
 }
 
+func (r *CommentRepository) DoesExtIdExist(pageId int, extId string) bool {
+	query := "SELECT count(*) FROM comments WHERE page_id = ? and ext_comment_id = ?"
+
+	row := r.db.QueryRow(query, pageId, extId)
+
+	count := 0
+
+	err := row.Scan(&count)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return count > 0
+}
+
 func (r *CommentRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS comments(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,7 +155,10 @@ score INTEGER,
 translated BOOLEAN NOT NULL DEFAULT 0,
 commented_at STRING,
 created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
-)`
+);
+CREATE INDEX IF NOT EXISTS idx_comments_page_id ON comments(page_id);
+CREATE INDEX IF NOT EXISTS idx_comments_ext_comment_id ON comments(ext_comment_id);
+`
 
 	_, err := r.db.Exec(cmd)
 

@@ -52,7 +52,7 @@ func (r *LinkRepository) Insert(link *Link) {
 	link.Id = int(id)
 }
 
-func (r *LinkRepository) DoesExternalIdExist(extId string) bool {
+func (r *LinkRepository) DoesExtIdExist(extId string) bool {
 	query := "SELECT count(*) FROM links WHERE ext_id = ?"
 
 	row := r.db.QueryRow(query, extId)
@@ -98,14 +98,17 @@ func (r *LinkRepository) FindByDate(date string) []Link {
 
 func (r *LinkRepository) CreateTable() {
 	cmd := `CREATE TABLE IF NOT EXISTS links(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-ext_id STRING NOT NULL,
-date STRING NOT NULL,
-url STRING NOT NULL UNIQUE,
-title STRING NOT NULL,
-scraped BOOLEAN NOT NULL DEFAULT 0,
-created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
-	)`
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	ext_id STRING NOT NULL,
+	date STRING NOT NULL,
+	url STRING NOT NULL UNIQUE,
+	title STRING NOT NULL,
+	scraped BOOLEAN NOT NULL DEFAULT 0,
+	created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
+);
+CREATE INDEX IF NOT EXISTS idx_links_date ON links(date);
+CREATE INDEX IF NOT EXISTS idx_links_ext_id ON links(ext_id);
+`
 
 	_, err := r.db.Exec(cmd)
 
