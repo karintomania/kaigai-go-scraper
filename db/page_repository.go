@@ -88,14 +88,29 @@ func (r *PageRepository) FindByDate(date string) []Page {
 	query := "SELECT * FROM pages WHERE date = ?"
 
 	rows, err := r.db.Query(query, date)
-
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	defer rows.Close()
 
-	Pages := make([]Page, 0)
+	return r.scan(rows)
+
+}
+
+func (r *PageRepository) FindUntranslatedByDate(date string) []Page {
+	query := "SELECT * FROM pages WHERE date = ? AND translated = 0"
+
+	rows, err := r.db.Query(query, date)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer rows.Close()
+
+	return r.scan(rows)
+}
+
+func (r *PageRepository) scan(rows *sql.Rows) []Page {
+	pages := make([]Page, 0)
 
 	for rows.Next() {
 		var page Page
@@ -120,11 +135,10 @@ func (r *PageRepository) FindByDate(date string) []Page {
 			log.Fatalln(err)
 		}
 
-		Pages = append(Pages, page)
+		pages = append(pages, page)
 	}
 
-	return Pages
-
+	return pages
 }
 
 func (r *PageRepository) CreateTable() {
@@ -142,6 +156,7 @@ tags STRING,
 translated BOOLEAN NOT NULL DEFAULT 0,
 published BOOLEAN NOT NULL DEFAULT 0,
 created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))
+CREATE INDEX idx_pages_date ON pages(date);
 	)`
 
 	_, err := r.db.Exec(cmd)

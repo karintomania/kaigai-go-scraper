@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	// Move these consts to .env
 	COMMENTS_CONTEXT_NUM = 10
 	COMMENTS_CHUNK_NUM   = 10
 	MAX_RETRIES          = 5
@@ -99,7 +100,7 @@ func translate(
 	pageRepository *db.PageRepository,
 	commentRepository *db.CommentRepository,
 ) error {
-	pages := pageRepository.FindByDate(dateString)
+	pages := pageRepository.FindUntranslatedByDate(dateString)
 
 	for _, page := range pages {
 		slog.Info("Translating page", slog.Int("page id", page.Id), slog.String("title", page.Title))
