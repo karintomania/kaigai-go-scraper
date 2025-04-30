@@ -18,43 +18,42 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/external"
 )
 
-func scrapeHtml(
+type ScrapeHtml struct {
+	lr *db.LinkRepository
+	pr *db.PageRepository
+	cr *db.CommentRepository
+}
+
+func NewScrapeHtml(
+	lr *db.LinkRepository,
+	pr *db.PageRepository,
+	cr *db.CommentRepository,
+) *ScrapeHtml {
+	return &ScrapeHtml{
+		lr: lr,
+		pr: pr,
+		cr: cr,
+	}
+}
+
+func (s *ScrapeHtml) run(
 	dateString string,
-	linkRepository *db.LinkRepository,
-	pageRepository *db.PageRepository,
-	commentRepository *db.CommentRepository,
 ) error {
-	if err := downloadHtmlsAsync(dateString, linkRepository, pageRepository); err != nil {
+	if err := s.downloadHtmlsAsync(dateString); err != nil {
 		return err
 	}
 
-	pages := pageRepository.FindByDate(dateString)
-
-	for _, page := range pages {
-		slog.Info("Scraping HTML", "title", page.Title, "page id", page.Id)
-
-		_, comments := getPageAndComments(&page)
-		pageRepository.Update(&page)
-
-		maxCommentsNum := common.GetEnvInt("max_comments_num")
-		maxReplyPerComment := common.GetEnvInt("max_reply_per_comment_num")
-
-		selectedComments := selectRelevantComments(comments, maxCommentsNum, maxReplyPerComment)
-
-		for _, comment := range selectedComments {
-			commentRepository.Insert(&comment)
-		}
+	if err := s.scrapePages(dateString); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func downloadHtmlsAsync(
+func (s *ScrapeHtml) downloadHtmlsAsync(
 	dateString string,
-	linkRepository *db.LinkRepository,
-	pageRepository *db.PageRepository,
 ) error {
-	links := linkRepository.FindByDate(dateString)
+	links := s.lr.FindByDate(dateString)
 
 	var wg sync.WaitGroup
 	var errEncountered error
@@ -67,7 +66,7 @@ func downloadHtmlsAsync(
 		time.Sleep(1 * time.Second)
 
 		go func(link *db.Link) {
-			err := downloadHtml(link, dateString, pageRepository)
+			err := s.downloadHtml(link, dateString)
 			if err != nil {
 				slog.Error(
 					"Error happend while downloading HTML",
@@ -83,7 +82,7 @@ func downloadHtmlsAsync(
 
 			// mark link as scraped
 			link.Scraped = true
-			linkRepository.Update(link)
+			s.lr.Update(link)
 
 			slog.Info("HTML downloaded", slog.String("title", link.Title), slog.Int("link id", link.Id))
 
@@ -99,7 +98,7 @@ func downloadHtmlsAsync(
 	return nil
 }
 
-func downloadHtml(link *db.Link, dateString string, pageRepository *db.PageRepository) error {
+func (s *ScrapeHtml) downloadHtml(link *db.Link, dateString string) error {
 	url, body := external.CallHackerNews(link)
 
 	htmlBytes, err := io.ReadAll(body)
@@ -118,7 +117,32 @@ func downloadHtml(link *db.Link, dateString string, pageRepository *db.PageRepos
 		RefUrl: link.URL,
 	}
 
-	pageRepository.Insert(&page)
+	s.pr.Insert(&page)
+
+	return nil
+}
+
+func (s *ScrapeHtml) scrapePages(dateStr string) error {
+	pages := s.pr.FindByDate(dateStr)
+
+	for _, page := range pages {
+		slog.Info("Scraping HTML", "title", page.Title, "page id", page.Id)
+
+		_, comments := getPageAndComments(&page)
+		s.pr.Update(&page)
+
+		maxCommentsNum := common.GetEnvInt("max_comments_num")
+		maxReplyPerComment := common.GetEnvInt("max_reply_per_comment_num")
+
+		selectedComments := selectRelevantComments(comments, maxCommentsNum, maxReplyPerComment)
+
+		for _, comment := range selectedComments {
+			// check if the comment already exists
+			if s.cr.DoesExtIdExist(page.Id, comment.ExtCommentId) {
+				s.cr.Insert(&comment)
+			}
+		}
+	}
 
 	return nil
 }

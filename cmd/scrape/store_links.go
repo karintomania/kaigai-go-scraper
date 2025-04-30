@@ -103,7 +103,7 @@ func (sl *StoreLinks) getTopLinks(linkJsons []JsonLink, n int, dateString string
 
 func (sl *StoreLinks) storeTopLinks(links []db.Link) {
 	for _, link := range links {
-		if !sl.lr.DoesExternalIdExist(link.ExtId) {
+		if !sl.lr.DoesExtIdExist(link.ExtId) {
 			sl.lr.Insert(&link)
 			slog.Info("Inserted", "link", link.URL, "title", link.Title)
 		}

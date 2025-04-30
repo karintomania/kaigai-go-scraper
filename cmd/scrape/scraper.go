@@ -32,11 +32,9 @@ func Scrape(
 	}
 
 	if toScrape {
-		if err := scrapeHtml(
-			date,
-			linkRepository,
-			pageRepository,
-			commentRepository); err != nil {
+		scrapeHtml := NewScrapeHtml(linkRepository, pageRepository, commentRepository)
+
+		if err := scrapeHtml.run(date); err != nil {
 			log.Panicf("Error scraping HTML: %v", err)
 		}
 	}

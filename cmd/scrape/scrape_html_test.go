@@ -1,13 +1,24 @@
 package scrape
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
+	"github.com/stretchr/testify/require"
 )
 
 func TestScrapeHtml(t *testing.T) {
+	common.SetLogger()
+
+	dbConn, cleanup := db.GetTestDbConnection()
+	defer cleanup()
+
+	lr := db.NewLinkRepository(dbConn)
+	pr := db.NewPageRepository(dbConn)
+	cr := db.NewCommentRepository(dbConn)
+	scrapeHtml := NewScrapeHtml(lr, pr, cr)
+
 	htmlContent := `<html>
         <head>
             <title>Sample Title | Example</title>
@@ -38,50 +49,61 @@ func TestScrapeHtml(t *testing.T) {
         </body>
     </html>`
 
+	date := "2025-01-01"
 	page := &db.Page{
 		Id:    99,
 		ExtId: "1",
 		Title: "Test Title, Which is Made !WAY! Too long intentionally to test the slug",
-		Date:  "2025-01-01",
+		Date:  date,
 		Html:  htmlContent,
 	}
 
-	page, comments := getPageAndComments(page)
+	pr.Insert(page)
 
-	if want, got := "test_title_which_is_made_way_too_long", page.Slug; want != got {
-		t.Errorf("expected slug to be %s, but got %s", want, got)
-	}
+	t.Run("scrapePages scrape correct info", func(t *testing.T) {
+		scrapeHtml.scrapePages(date)
 
-	for i, want := range []db.Comment{
-		{
-			ExtCommentId: "123",
-			PageId:       page.Id,
-			UserName:     "user1",
-			Content:      "Test comment 1",
-			Indent:       0,
-			Reply:        100,
-			CommentedAt:  "2025-01-02T03:04:05",
-		},
-		{
-			ExtCommentId: "456",
-			PageId:       page.Id,
-			UserName:     "user2",
-			Content:      "Test comment 2",
-			Indent:       1,
-			Reply:        50,
-			CommentedAt:  "2024-05-19T04:06:08",
-		},
-	} {
+		resultPage := pr.FindByDate(date)[0]
+		resultComments := cr.FindByPageId(page.Id)
 
-		if got := comments[i]; !reflect.DeepEqual(want, got) {
-			t.Errorf(
-				"comment %d expected to be %v, but got %v",
-				i,
-				want,
-				got,
-			)
+		require.Equal(t, "test_title_which_is_made_way_too_long", resultPage.Slug)
+
+		for i, want := range []db.Comment{
+			{
+				ExtCommentId: "123",
+				PageId:       page.Id,
+				UserName:     "user1",
+				Content:      "Test comment 1",
+				Indent:       0,
+				Reply:        100,
+				CommentedAt:  "2025-01-02T03:04:05",
+			},
+			{
+				ExtCommentId: "456",
+				PageId:       page.Id,
+				UserName:     "user2",
+				Content:      "Test comment 2",
+				Indent:       1,
+				Reply:        50,
+				CommentedAt:  "2024-05-19T04:06:08",
+			},
+		} {
+			require.Equal(t, want.ExtCommentId, resultComments[i].ExtCommentId)
+			require.Equal(t, want.PageId, resultComments[i].PageId)
+			require.Equal(t, want.UserName, resultComments[i].UserName)
+			require.Equal(t, want.Content, resultComments[i].Content)
+			require.Equal(t, want.Indent, resultComments[i].Indent)
+			require.Equal(t, want.Reply, resultComments[i].Reply)
+			require.Equal(t, want.CommentedAt, resultComments[i].CommentedAt)
 		}
-	}
+	})
+	t.Run("scrapePages insert only new comments", func(t *testing.T) {
+		// run scrape pages again
+		scrapeHtml.scrapePages(date)
+		resultComments := cr.FindByPageId(page.Id)
+
+		require.Equal(t, 2, len(resultComments))
+	})
 
 }
 
