@@ -115,7 +115,7 @@ func escapeStringForJSON(s string) string {
 
 	escapedString := string(escapedBytes)
 	// Remove surrounding quotes
-	escapedString = strings.Trim(escapedString, "\"")
+	escapedString = strings.Trim(escapedString, "\\\"")
 	return escapedString
 }
 
