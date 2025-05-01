@@ -47,20 +47,16 @@ func TestHttpserver(t *testing.T) {
 		},
 	}
 
-	for _, page := range pages {
-		pr.Insert(&page)
-	}
-
 	errFlag := false
-	mockPublishFunc := func() error {
+	mockPush := func() (string, error) {
 		if errFlag {
-			return fmt.Errorf("mock error")
+			return "", fmt.Errorf("mock error")
 		}else {
-			return nil
+			return "Push succeed", nil
 		}
 	}
 
-	s := NewTestServer(dbConn, date, mockPublishFunc)
+	s := NewTestServer(dbConn, date, mockPush)
 
 	common.MockEnv("server_port", "9999")
 	rootUrl := fmt.Sprintf("http://localhost:%s/", common.GetEnv("server_port"))
@@ -73,7 +69,7 @@ func TestHttpserver(t *testing.T) {
 	// wait for the server to start
 	time.Sleep(500 * time.Millisecond)
 
-	t.Run("Get returns unpublished pages", func(t *testing.T) {
+	t.Run("Get shows nothing to publish when no pages", func(t *testing.T) {
 		req, err := http.NewRequest("GET", rootUrl, nil)
 		require.NoError(t, err)
 
@@ -88,7 +84,27 @@ func TestHttpserver(t *testing.T) {
 		require.NoError(t, err)
 		html := string(htmlBytes)
 
-		t.Log(html)
+		require.Contains(t, string(html), "Nothing to publish")
+	})
+
+	t.Run("Get returns unpublished pages", func(t *testing.T) {
+		for _, page := range pages {
+			pr.Insert(&page)
+		}
+
+		req, err := http.NewRequest("GET", rootUrl, nil)
+		require.NoError(t, err)
+
+		response, err := cli.Do(req)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, response.StatusCode)
+
+		body := response.Body
+		defer body.Close()
+		htmlBytes, err := io.ReadAll(body)
+		require.NoError(t, err)
+		html := string(htmlBytes)
 
 		require.Contains(t, string(html), "未公開1")
 		require.Contains(t, string(html), "未公開2")
@@ -111,7 +127,6 @@ func TestHttpserver(t *testing.T) {
 		
 		html := string(htmlBytes)
 
-
 		require.Equal(t, http.StatusOK, response.StatusCode)
 		require.Contains(t, string(html), "Success")
 	})
@@ -130,8 +145,6 @@ func TestHttpserver(t *testing.T) {
 		require.NoError(t, err)
 		
 		html := string(htmlBytes)
-
-		t.Log(html)
 
 		require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		require.Contains(t, string(html), "Something went wrong: mock error")

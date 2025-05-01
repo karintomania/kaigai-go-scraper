@@ -18,11 +18,13 @@ const PUBLISH_TEMPLATE = `<html>
 </html>
 `
 
+type pushFunc func() (string, error)
+
 type PublishHandler struct {
-	push func() error
+	push pushFunc
 }
 
-func NewPublishHandler(push func() error) *PublishHandler {
+func NewPublishHandler(push pushFunc) *PublishHandler {
 	return &PublishHandler{push: push}
 }
 
@@ -35,11 +37,11 @@ func (ph *PublishHandler) handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var result string
-	if err := ph.push(); err != nil {
+	if output, err := ph.push(); err != nil {
 		result = fmt.Sprintf("Something went wrong: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
-		result = "Success"
+		result = fmt.Sprintf("Success: %s", output)
 	}
 
 	tmpl := template.Must(template.New("push").Parse(PUBLISH_TEMPLATE))

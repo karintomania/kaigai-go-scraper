@@ -20,6 +20,9 @@ const (
 {{range $value}}
 	<h2>{{.TranslatedTitle}}</h2>
 {{end}}
+{{else}}
+	<h1>All clear!</h1>
+	<p>Nothing to publish.</p>
 {{end}}
 	<form method="POST" action="/publish">
 		<input type="submit" value="Publish" />
@@ -63,12 +66,10 @@ p {
     line-height: 1.6;
     margin-bottom: 15px;
 }
-
 a {
     color: #007bff;
     text-decoration: none;
 }
-
 a:hover {
     text-decoration: underline;
 }
