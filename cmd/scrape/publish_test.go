@@ -48,7 +48,7 @@ func TestPublish(t *testing.T) {
 	}
 
 	gitCounter := 1
-	mockRunGitCommand := func(args []string) error {
+	mockRunGitCommand := func(args []string) (string, error) {
 		if gitCounter == 1 {
 			require.Equal(t, args[0], "add")
 			require.Equal(t, args[1], ".")
@@ -61,7 +61,7 @@ func TestPublish(t *testing.T) {
 		} else {
 			t.Error("This should be called only twice")
 		}
-		return nil
+		return "Success", nil
 	}
 
 	pr := db.NewPageRepository(dbConn)

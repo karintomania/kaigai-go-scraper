@@ -128,7 +128,10 @@ func (tp *TranslatePage) run(
 		}
 
 		// update page, comments
-		tp.pr.Update(&page)
+		if err := tp.pr.Update(&page); err != nil {
+			slog.Error("failed to update page", "err", err)
+			return err
+		}
 
 		for _, comment := range comments {
 			tp.cr.Update(&comment)

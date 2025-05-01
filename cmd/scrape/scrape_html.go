@@ -129,7 +129,9 @@ func (s *ScrapeHtml) scrapePages(dateStr string) error {
 		slog.Info("Scraping HTML", "title", page.Title, "page id", page.Id)
 
 		_, comments := getPageAndComments(&page)
-		s.pr.Update(&page)
+		if err := s.pr.Update(&page); err != nil {
+			return err
+		}
 
 		maxCommentsNum := common.GetEnvInt("max_comments_num")
 		maxReplyPerComment := common.GetEnvInt("max_reply_per_comment_num")

@@ -5,7 +5,6 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/karintomania/kaigai-go-scraper/common"
@@ -14,19 +13,19 @@ import (
 
 type Publish struct {
 	pr            *db.PageRepository
-	runGitCommand func([]string) error
+	runGitCommand common.RunGitCommandFunc
 }
 
 func NewPublish(pr *db.PageRepository) *Publish {
 	return &Publish{
 		pr:            pr,
-		runGitCommand: defaultRunGitCommand,
+		runGitCommand: common.RunGitCommand,
 	}
 }
 
 func NewPublishWithRunGitCommand(
 	pr *db.PageRepository,
-	runGitCommand func([]string) error,
+	runGitCommand common.RunGitCommandFunc,
 ) *Publish {
 	return &Publish{
 		pr:            pr,
@@ -54,7 +53,10 @@ func (p *Publish) run(dateStr string) error {
 		}
 
 		page.Published = true
-		p.pr.Update(&page)
+		if err := p.pr.Update(&page); err != nil {
+			return err
+		}
+
 	}
 
 	slog.Info("test")
@@ -109,29 +111,13 @@ func (p *Publish) commit(dateStr string) error {
 
 	options := []string{"add", "."}
 
-	if err := p.runGitCommand(options); err != nil {
+	if _, err := p.runGitCommand(options); err != nil {
 		return err
 	}
 
 	options = []string{"commit", "-m", fmt.Sprintf("add %s", dateStr)}
 
-	if err := p.runGitCommand(options); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func defaultRunGitCommand(options []string) error {
-	cmdStr := "git"
-	slog.Info("running command", "cmd", cmdStr, "options", options)
-
-	cmd := exec.Command(cmdStr, options...)
-	cmd.Dir = common.GetEnv("blog_repo")
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		slog.Error("error running command", "cmd", cmdStr, "options", options, "output", string(output), "err", err)
+	if _, err := p.runGitCommand(options); err != nil {
 		return err
 	}
 

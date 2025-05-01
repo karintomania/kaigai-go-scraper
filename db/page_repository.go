@@ -24,10 +24,10 @@ type Page struct {
 	CreatedAt       string
 }
 
-func (r *PageRepository) Update(page *Page) {
+func (r *PageRepository) Update(page *Page) error {
 	cmd := `UPDATE pages SET ext_id = ?, date = ?, html = ?, title = ?, translated_title = ?, slug = ?, url = ?, ref_url = ?, tags = ?, translated = ?, published = ? WHERE id = ?`
 
-	_, err := r.db.Exec(cmd,
+	_, err := r.dbConn.Exec(cmd,
 		page.ExtId,
 		page.Date,
 		page.Html,
@@ -41,23 +41,21 @@ func (r *PageRepository) Update(page *Page) {
 		page.Published,
 		page.Id)
 
-	if err != nil {
-		log.Fatalln(err)
-	}
+	return err
 }
 
 type PageRepository struct {
-	db *sql.DB
+	dbConn *sql.DB
 }
 
 func NewPageRepository(db *sql.DB) *PageRepository {
-	return &PageRepository{db: db}
+	return &PageRepository{dbConn: db}
 }
 
 func (r *PageRepository) Insert(page *Page) {
 	cmd := `INSERT INTO pages (ext_id, date, html, title, translated_title, slug, url, ref_url, tags, translated, published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	result, err := r.db.Exec(cmd,
+	result, err := r.dbConn.Exec(cmd,
 		page.ExtId,
 		page.Date,
 		page.Html,
@@ -87,7 +85,7 @@ func (r *PageRepository) Insert(page *Page) {
 func (r *PageRepository) FindByDate(date string) []Page {
 	query := "SELECT * FROM pages WHERE date = ?"
 
-	rows, err := r.db.Query(query, date)
+	rows, err := r.dbConn.Query(query, date)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -100,7 +98,7 @@ func (r *PageRepository) FindByDate(date string) []Page {
 func (r *PageRepository) FindUntranslatedByDate(date string) []Page {
 	query := "SELECT * FROM pages WHERE date = ? AND translated = 0"
 
-	rows, err := r.db.Query(query, date)
+	rows, err := r.dbConn.Query(query, date)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -112,7 +110,7 @@ func (r *PageRepository) FindUntranslatedByDate(date string) []Page {
 func (r *PageRepository) FindUnpublished() []Page {
 	query := "SELECT * FROM pages WHERE published = 0"
 
-	rows, err := r.db.Query(query)
+	rows, err := r.dbConn.Query(query)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -171,7 +169,7 @@ func (r *PageRepository) CreateTable() {
 );
 CREATE INDEX idx_pages_date ON pages(date);`
 
-	_, err := r.db.Exec(cmd)
+	_, err := r.dbConn.Exec(cmd)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -181,7 +179,7 @@ CREATE INDEX idx_pages_date ON pages(date);`
 func (r *PageRepository) Drop() {
 	cmd := "DROP TABLE IF EXISTS pages"
 
-	_, err := r.db.Exec(cmd)
+	_, err := r.dbConn.Exec(cmd)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -191,7 +189,7 @@ func (r *PageRepository) Drop() {
 func (r *PageRepository) Truncate() {
 	cmd := "DELETE from pages"
 
-	_, err := r.db.Exec(cmd)
+	_, err := r.dbConn.Exec(cmd)
 
 	if err != nil {
 		log.Fatalln(err)

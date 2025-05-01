@@ -7,8 +7,6 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
-
-
 const (
 	GET_PAGE_TEMPLATE = `<html>
 <header>
@@ -79,11 +77,10 @@ a:hover {
 type DatePagesMap map[string][]db.Page
 
 type GetPageHandler struct {
-	pr      *db.PageRepository
-	dateStr string
+	pr *db.PageRepository
 }
 
-func NewGetPageHandler(pr *db.PageRepository, dateStr string) *GetPageHandler {
+func NewGetPageHandler(pr *db.PageRepository) *GetPageHandler {
 	return &GetPageHandler{pr: pr}
 }
 
@@ -99,7 +96,9 @@ func (gph *GetPageHandler) getPages(w http.ResponseWriter, r *http.Request) {
 
 	for _, page := range pages {
 		date := page.Date
-		if _, ok := datePagesMap[date]; ok {
+
+		_, ok := datePagesMap[date]
+		if ok {
 			datePagesMap[date] = append(datePagesMap[date], page)
 		} else {
 			datePagesMap[date] = []db.Page{page}
@@ -110,9 +109,9 @@ func (gph *GetPageHandler) getPages(w http.ResponseWriter, r *http.Request) {
 
 	if err := tmpl.Execute(
 		w,
-		struct{
+		struct {
 			DatePagesMap DatePagesMap
-			Header string
+			Header       string
 		}{
 			datePagesMap,
 			HEADER_TEMPLATE,

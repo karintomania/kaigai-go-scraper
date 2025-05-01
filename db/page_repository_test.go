@@ -83,7 +83,7 @@ func TestPageRepository(t *testing.T) {
 			Translated:      true,
 			Published:       true,
 		}
-		pr.Update(updatedPage)
+		require.NoError(t, pr.Update(updatedPage))
 
 		// Verify the update
 		pages := pr.FindByDate("2025-01-02")

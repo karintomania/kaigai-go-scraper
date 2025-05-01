@@ -23,14 +23,13 @@ func TestEscapeStringForJson(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"", ""},
-		{"a", "a"},
-		{"\n", "\\n"},
-		{"\t", "\\t"},
-		{"\\", "\\\\"},
+		{"n\n", "n\\n"},
+		{"t\t", "t\\t"},
+		{"slash\\slash", "slash\\\\slash"},
+		{"\"quoted\"", "quoted"},
 	}
 	for _, tc := range testCases {
 		result := escapeStringForJSON(tc.input)
-		require.Equal(t, tc.expected, result, "Expected %s, got %s", tc.expected, result)
+		require.Equal(t, tc.expected, result)
 	}
 }

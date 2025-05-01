@@ -51,7 +51,7 @@ func TestHttpserver(t *testing.T) {
 	mockPush := func() (string, error) {
 		if errFlag {
 			return "", fmt.Errorf("mock error")
-		}else {
+		} else {
 			return "Push succeed", nil
 		}
 	}
@@ -111,24 +111,24 @@ func TestHttpserver(t *testing.T) {
 		require.NotContains(t, string(html), "公開済1")
 	})
 
-
 	t.Run("Publish publishes", func(t *testing.T) {
-
 		req, err := http.NewRequest("POST", publishUrl, strings.NewReader("{}"))
 		require.NoError(t, err)
 
 		response, err := cli.Do(req)
 		require.NoError(t, err)
 
-
 		defer response.Body.Close()
 		htmlBytes, err := io.ReadAll(response.Body)
 		require.NoError(t, err)
-		
+
 		html := string(htmlBytes)
 
 		require.Equal(t, http.StatusOK, response.StatusCode)
 		require.Contains(t, string(html), "Success")
+
+		unpublished := pr.FindUnpublished()
+		require.Len(t, unpublished, 0)
 	})
 
 	t.Run("Publish handles error", func(t *testing.T) {
@@ -143,7 +143,7 @@ func TestHttpserver(t *testing.T) {
 		defer response.Body.Close()
 		htmlBytes, err := io.ReadAll(response.Body)
 		require.NoError(t, err)
-		
+
 		html := string(htmlBytes)
 
 		require.Equal(t, http.StatusInternalServerError, response.StatusCode)

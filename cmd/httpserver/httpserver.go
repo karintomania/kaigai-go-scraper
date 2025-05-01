@@ -13,10 +13,9 @@ import (
 )
 
 type Server struct {
-	dbConn  *sql.DB
-	pr      *db.PageRepository
-	dateStr string
-	push pushFunc
+	dbConn     *sql.DB
+	pr         *db.PageRepository
+	push       pushFunc
 	httpServer *http.Server
 }
 
@@ -24,12 +23,11 @@ func NewServer() *Server {
 	dbConn := db.GetDbConnection(common.GetEnv("db_path"))
 
 	return &Server{
-		dbConn:  dbConn,
-		pr:      db.NewPageRepository(dbConn),
-		dateStr: time.Now().Format("2006-01-02"),
-		// TODO: add proper publish function
+		dbConn: dbConn,
+		pr:     db.NewPageRepository(dbConn),
 		push: func() (string, error) {
-			return "Test function", nil
+			options := []string{"push"}
+			return common.RunGitCommand(options)
 		},
 		httpServer: &http.Server{},
 	}
@@ -41,10 +39,9 @@ func NewTestServer(
 	push pushFunc,
 ) *Server {
 	return &Server{
-		dbConn:  dbConn,
-		pr:      db.NewPageRepository(dbConn),
-		dateStr: time.Now().Format("2006-01-02"),
-		push: push,
+		dbConn:     dbConn,
+		pr:         db.NewPageRepository(dbConn),
+		push:       push,
 		httpServer: &http.Server{},
 	}
 }
@@ -52,11 +49,11 @@ func NewTestServer(
 func (s *Server) Start() {
 	defer s.dbConn.Close()
 
-	gph := NewGetPageHandler(s.pr, s.dateStr)
+	gph := NewGetPageHandler(s.pr)
 
 	http.HandleFunc("/", gph.getPages)
 
-	ph := NewPublishHandler(s.push)
+	ph := NewPublishHandler(s.push, s.pr)
 
 	http.HandleFunc("/publish", ph.handle)
 
