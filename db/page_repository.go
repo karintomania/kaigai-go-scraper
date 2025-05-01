@@ -109,6 +109,18 @@ func (r *PageRepository) FindUntranslatedByDate(date string) []Page {
 	return r.scan(rows)
 }
 
+func (r *PageRepository) FindUnpublished() []Page {
+	query := "SELECT * FROM pages WHERE published = 0"
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer rows.Close()
+
+	return r.scan(rows)
+}
+
 func (r *PageRepository) scan(rows *sql.Rows) []Page {
 	pages := make([]Page, 0)
 

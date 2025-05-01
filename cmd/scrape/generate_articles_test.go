@@ -53,9 +53,9 @@ func TestGenerateArticle(t *testing.T) {
 	comments = append(comments, db.Comment{
 		Id:                28,
 		UserName:          fmt.Sprintf("User-%d", 28),
-		TranslatedContent: fmt.Sprintf("low score comment!!"),
+		TranslatedContent: "low score comment!!",
 		Score:             10,
-		CommentedAt:       fmt.Sprintf("2025-12-28T00:01:02"),
+		CommentedAt:       "2025-12-28T00:01:02",
 	})
 
 	ag := NewTestGenerateArticle(

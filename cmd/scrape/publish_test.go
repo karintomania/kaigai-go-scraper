@@ -38,7 +38,8 @@ func TestPublish(t *testing.T) {
 	srcFile, err := os.Create(srcPageDir + "/index.md")
 	require.NoError(t, err)
 
-	srcFile.WriteString("test content")
+	_, err = srcFile.WriteString("test content")
+	require.NoError(t, err)
 
 	page := db.Page{
 		Id:   1,

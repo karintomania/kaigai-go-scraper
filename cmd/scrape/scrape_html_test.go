@@ -61,7 +61,8 @@ func TestScrapeHtml(t *testing.T) {
 	pr.Insert(page)
 
 	t.Run("scrapePages scrape correct info", func(t *testing.T) {
-		scrapeHtml.scrapePages(date)
+		err := scrapeHtml.scrapePages(date)
+		require.NoError(t, err)
 
 		resultPage := pr.FindByDate(date)[0]
 		resultComments := cr.FindByPageId(page.Id)
@@ -99,7 +100,9 @@ func TestScrapeHtml(t *testing.T) {
 	})
 	t.Run("scrapePages insert only new comments", func(t *testing.T) {
 		// run scrape pages again
-		scrapeHtml.scrapePages(date)
+		err := scrapeHtml.scrapePages(date)
+		require.NoError(t, err)
+
 		resultComments := cr.FindByPageId(page.Id)
 
 		require.Equal(t, 2, len(resultComments))

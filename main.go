@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/karintomania/kaigai-go-scraper/cmd"
+	"github.com/karintomania/kaigai-go-scraper/cmd/httpserver"
 	"github.com/karintomania/kaigai-go-scraper/cmd/scrape"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -25,7 +26,7 @@ func main() {
 
 	defaultDate := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
 
-	flag.StringVar(&mode, "mode", "scrape", "Mode of operation: migrate or scrape")
+	flag.StringVar(&mode, "mode", "scrape", "Mode of operation: migrate/scrape/server")
 	flag.StringVar(&date, "date", defaultDate, "Date to scrape (YYYY-MM-DD)")
 	flag.BoolVar(&toRunAll, "run-all", false, "Alias for -l -s -t -g -p")
 	flag.BoolVar(&toStoreLink, "l", false, "Flag to store links")
@@ -56,5 +57,11 @@ func main() {
 
 	if mode == "scrape" {
 		scrape.Scrape(date, toStoreLink, toScrape, toTranslate, toGenerate, toPublish)
+	}
+
+	if mode == "server" {
+		s := httpserver.NewServer()
+
+		s.Start()
 	}
 }
