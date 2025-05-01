@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -16,6 +17,7 @@ type Server struct {
 	pr      *db.PageRepository
 	dateStr string
 	publishFun func() error
+	httpServer *http.Server
 }
 
 func NewServer() *Server {
@@ -29,6 +31,7 @@ func NewServer() *Server {
 		publishFun: func() error {
 			return nil
 		},
+		httpServer: &http.Server{},
 	}
 }
 
@@ -42,6 +45,7 @@ func NewTestServer(
 		pr:      db.NewPageRepository(dbConn),
 		dateStr: time.Now().Format("2006-01-02"),
 		publishFun: publishFun,
+		httpServer: &http.Server{},
 	}
 }
 
@@ -57,10 +61,24 @@ func (s *Server) Start() {
 	http.HandleFunc("/publish", ph.handle)
 
 	port := fmt.Sprintf(":%s", common.GetEnv("server_port"))
+	s.httpServer.Addr = port
 
 	slog.Info("starting serever", "port", port)
 
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		slog.Error("error on starting server", "error", err)
 	}
+}
+
+func (s *Server) Shutdown() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := s.httpServer.Shutdown(ctx); err != nil {
+		slog.Error("Server shutdown failed", "error", err)
+		return err
+	}
+
+	slog.Info("Server gracefully stopped")
+	return s.dbConn.Close()
 }

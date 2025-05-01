@@ -8,8 +8,12 @@ import (
 )
 
 const PUBLISH_TEMPLATE = `<html>
+<header>
+	{{.Header}}
+</header>
 <body>
-	{{.Result}}
+	<p>{{.Result}}</p>
+	<a href="/">Back to home</a>
 </body>
 </html>
 `
@@ -42,7 +46,13 @@ func (ph *PublishHandler) handle(w http.ResponseWriter, r *http.Request) {
 
 	if err := tmpl.Execute(
 		w,
-		struct{ Result string }{result},
+		struct{
+			Result string
+			Header string
+		}{
+			result,
+			HEADER_TEMPLATE,
+		},
 	); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

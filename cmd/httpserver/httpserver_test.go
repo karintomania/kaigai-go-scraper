@@ -51,20 +51,24 @@ func TestHttpserver(t *testing.T) {
 		pr.Insert(&page)
 	}
 
+	errFlag := false
 	mockPublishFunc := func() error {
-		return nil
+		if errFlag {
+			return fmt.Errorf("mock error")
+		}else {
+			return nil
+		}
 	}
 
 	s := NewTestServer(dbConn, date, mockPublishFunc)
 
 	common.MockEnv("server_port", "9999")
 	rootUrl := fmt.Sprintf("http://localhost:%s/", common.GetEnv("server_port"))
+	publishUrl := fmt.Sprintf("%spublish", rootUrl)
 
 	cli := &http.Client{}
 
-	go func() {
-		s.Start()
-	}()
+	go s.Start()
 
 	// wait for the server to start
 	time.Sleep(500 * time.Millisecond)
@@ -91,27 +95,47 @@ func TestHttpserver(t *testing.T) {
 		require.NotContains(t, string(html), "公開済1")
 	})
 
+
 	t.Run("Publish publishes", func(t *testing.T) {
-		publishUrl := fmt.Sprintf("%spublish", rootUrl)
 
 		req, err := http.NewRequest("POST", publishUrl, strings.NewReader("{}"))
 		require.NoError(t, err)
 
-		t.Logf("Before Do: Method=%s, URL=%s", req.Method, req.URL.String())
+		response, err := cli.Do(req)
+		require.NoError(t, err)
+
+
+		defer response.Body.Close()
+		htmlBytes, err := io.ReadAll(response.Body)
+		require.NoError(t, err)
+		
+		html := string(htmlBytes)
+
+
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Contains(t, string(html), "Success")
+	})
+
+	t.Run("Publish handles error", func(t *testing.T) {
+		errFlag = true
+
+		req, err := http.NewRequest("POST", publishUrl, strings.NewReader("{}"))
+		require.NoError(t, err)
 
 		response, err := cli.Do(req)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusOK, response.StatusCode)
-
-		body := response.Body
-		defer body.Close()
-		htmlBytes, err := io.ReadAll(body)
+		defer response.Body.Close()
+		htmlBytes, err := io.ReadAll(response.Body)
 		require.NoError(t, err)
+		
 		html := string(htmlBytes)
 
 		t.Log(html)
 
-		require.Contains(t, string(html), "Success")
+		require.Equal(t, http.StatusInternalServerError, response.StatusCode)
+		require.Contains(t, string(html), "Something went wrong: mock error")
 	})
+
+	require.NoError(t, s.Shutdown())
 }
