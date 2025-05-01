@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"text/template"
 
+	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
@@ -13,10 +14,12 @@ const (
 {{.Header}}
 </header>
 <body>
+<h2><a href="{{.Host}}">Open Blog</a></h2>
 {{range $key, $value := .DatePagesMap}}
 <h1>{{$key}}</h1>
 {{range $value}}
 	<h2>{{.TranslatedTitle}}</h2>
+	<a href={{.RefUrl}}>{{.Title}}</a>
 {{end}}
 {{else}}
 	<h1>All clear!</h1>
@@ -112,9 +115,11 @@ func (gph *GetPageHandler) getPages(w http.ResponseWriter, r *http.Request) {
 		struct {
 			DatePagesMap DatePagesMap
 			Header       string
+			Host       string
 		}{
 			datePagesMap,
 			HEADER_TEMPLATE,
+			common.GetEnv("server_host"),
 		},
 	); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

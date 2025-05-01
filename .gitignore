@@ -6,3 +6,4 @@
 output/*
 
 kaigai-go-scraper
+*.log
