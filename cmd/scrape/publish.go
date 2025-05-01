@@ -11,6 +11,8 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
+// TODO: This is actually just moving files, not publishing.
+// might as well rename it
 type Publish struct {
 	pr            *db.PageRepository
 	runGitCommand common.RunGitCommandFunc
@@ -51,12 +53,6 @@ func (p *Publish) run(dateStr string) error {
 		if err := p.copy(src, dest, dateStr, &page); err != nil {
 			return err
 		}
-
-		page.Published = true
-		if err := p.pr.Update(&page); err != nil {
-			return err
-		}
-
 	}
 
 	slog.Info("test")
