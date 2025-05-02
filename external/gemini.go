@@ -17,10 +17,6 @@ import (
 
 type CallAI func(string) (string, error)
 
-// TODO: move this to .env
-// dogde the rate limit
-const GEMINI_SLEEP_SECONDS = 4
-
 type geminiResponse struct {
 	Candidates []struct {
 		Content struct {
@@ -42,7 +38,8 @@ func (gr *geminiResponse) getText() string {
 }
 
 func CallGemini(prompt string) (string, error) {
-	time.Sleep(GEMINI_SLEEP_SECONDS * time.Second)
+	sleepSecond := time.Duration(common.GetEnvInt("gemini_sleep_second"))
+	time.Sleep(sleepSecond * time.Second)
 
 	data, err := geminiHttpCall(prompt)
 	if err != nil {
