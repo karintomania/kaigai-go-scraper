@@ -7,6 +7,7 @@ import (
 )
 
 func TestPost(t *testing.T) {
-	// Post()
+	t.Skip("This test is only for E2E test")
+	Post()
 	require.True(t, true)
 }
