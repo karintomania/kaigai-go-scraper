@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log/slog"
 	// "fmt"
 	"log"
 
@@ -70,6 +71,7 @@ func (r *PageRepository) Insert(page *Page) {
 	)
 
 	if err != nil {
+		slog.Error("failed to store page", "page", page)
 		log.Fatalln(err)
 	}
 

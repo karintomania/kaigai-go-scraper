@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log/slog"
 	// "fmt"
 	"log"
 
@@ -40,12 +41,14 @@ func (r *LinkRepository) Insert(link *Link) {
 
 	result, err := r.db.Exec(cmd, link.ExtId, link.Date, link.URL, link.Title, link.Scraped)
 	if err != nil {
+		slog.Error("failed to insert link", "link", link)
 		log.Fatalln(err)
 	}
 
 	id, err := result.LastInsertId()
 
 	if err != nil {
+		slog.Error("failed to get last insert id link", "link", link)
 		log.Fatalln(err)
 	}
 
