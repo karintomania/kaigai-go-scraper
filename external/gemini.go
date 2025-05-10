@@ -29,13 +29,14 @@ type geminiResponse struct {
 	ModelVersion string `json:"modelVersion"`
 }
 
-func (gr *geminiResponse) getText() string {
+func (gr *geminiResponse) getText() (string, error) {
 	if len(gr.Candidates) == 0 ||
 		len(gr.Candidates[0].Content.Parts) == 0 {
-		log.Panicf("Invalid gemini response: %v", gr)
+		slog.Error("Invalid gemini response", "gr", gr)
+		return "", fmt.Errorf("Invalid gemini response: %v", gr);
 	}
 
-	return gr.Candidates[0].Content.Parts[0].Text
+	return gr.Candidates[0].Content.Parts[0].Text, nil
 }
 
 func CallGemini(prompt string) (string, error) {
@@ -66,7 +67,10 @@ func CallGemini(prompt string) (string, error) {
 		return "", err
 	}
 
-	answer := gr.getText()
+	answer, err := gr.getText()
+	if err != nil {
+		return "", err
+	}
 
 	answer = sanitizeResponse(answer)
 
