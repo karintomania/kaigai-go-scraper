@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"encoding/json"
@@ -41,7 +42,20 @@ func CallGemini(prompt string) (string, error) {
 	sleepSecond := time.Duration(common.GetEnvInt("gemini_sleep_second"))
 	time.Sleep(sleepSecond * time.Second)
 
-	data, err := geminiHttpCall(prompt)
+	var data []byte
+	var err error
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		data, err = geminiHttpCall(prompt)
+		wg.Done()
+	}()
+
+	// This basically wait at least the specifed second, and then as long as gemini takes
+	time.Sleep(sleepSecond * time.Second)
+	wg.Wait()
+
 	if err != nil {
 		return "", err
 	}

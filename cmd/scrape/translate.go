@@ -270,6 +270,7 @@ func sanitizeTranslatedComment(c string) string {
 
 	// replace HTML tags
 	// escape <br> first and replace back later
+	c = strings.ReplaceAll(c, "\\n", `<br>`)
 	c = strings.ReplaceAll(c, "\n", `<br>`)
 	c = strings.ReplaceAll(c, `<br>`, `$$br$$`)
 	c = strings.ReplaceAll(c, `<`, `＜`)
