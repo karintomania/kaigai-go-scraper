@@ -52,6 +52,7 @@ func Migrate(dbConn *sql.DB) {
 		NewCommentRepository(dbConn),
 		NewPageRepository(dbConn),
 		NewTweetRepository(dbConn),
+		NewKvRepository(dbConn),
 	}
 
 	for _, repo := range repos {
