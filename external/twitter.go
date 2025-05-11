@@ -17,29 +17,35 @@ type RefreshTokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func Post() {
-	url := "https://api.x.com/2/tweets"
+func Post(content string, bearer string) error {
+	baseUrl := common.GetEnv("x_base_url")
+	url := fmt.Sprintf("%s/2/tweets", baseUrl)
 
-	title := "会社への忠誠心ってマジ意味ある？ 企業に尽くしても報われない現実（2018年）"
-	link := "https://www.kaigai-tech-matome.com/posts/2025_04/2025_04_24_on_loyalty_to_your_employer_2018/"
-	content := fmt.Sprintf("「%s」に対する海外の反応をまとめました。 #テックニュース #海外の反応\n\n%s", title, link)
+	// title := "会社への忠誠心ってマジ意味ある？ 企業に尽くしても報われない現実（2018年）"
+	// link := "https://www.kaigai-tech-matome.com/posts/2025_04/2025_04_24_on_loyalty_to_your_employer_2018/"
+	// content := fmt.Sprintf("「%s」に対する海外の反応をまとめました。 #テックニュース #海外の反応\n\n%s", title, link)
 
-	payload := strings.NewReader(fmt.Sprintf(`{"text": "%s"}`, content))
+	payload := strings.NewReader(fmt.Sprintf(`{"text":"%s"}`, content))
 
 	req, _ := http.NewRequest("POST", url, payload)
 
-	bearer := ""
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", bearer))
 	req.Header.Add("Content-Type", "application/json")
 
-	res, _ := http.DefaultClient.Do(req)
+	cli := getHttpClient()
 
+	res, _ := cli.Do(req)
 	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusCreated {
+		return fmt.Errorf("failed to post tweet: %s", res.Status)
+	}
 	body, _ := io.ReadAll(res.Body)
 
 	fmt.Println(res)
 	fmt.Println(string(body))
 
+	return nil
 }
 
 func RefreshToken(refreshToken string) (RefreshTokenResponse, error) {

@@ -55,13 +55,22 @@ func (r *KvRepository) Insert(kv *Kv) {
 func (r *KvRepository) Update(kv *Kv) {
 	cmd := `UPDATE kvs SET value = ? WHERE key = ?;`
 
-	_, err := r.db.Exec(cmd,
-		kv.Key,
+	result, err := r.db.Exec(cmd,
 		kv.Value,
+		kv.Key,
 	)
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Panicln(err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	if affected == 0 {
+		log.Panicf("no value found for the key: %s", kv.Key)
 	}
 }
 
