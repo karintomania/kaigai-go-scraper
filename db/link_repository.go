@@ -104,7 +104,7 @@ func (r *LinkRepository) CreateTable() {
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	ext_id STRING NOT NULL,
 	date STRING NOT NULL,
-	url STRING NOT NULL UNIQUE,
+	url STRING NOT NULL,
 	title STRING NOT NULL,
 	scraped BOOLEAN NOT NULL DEFAULT 0,
 	created_at STRING NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M:%fZ'))

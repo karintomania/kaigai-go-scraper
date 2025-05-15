@@ -5,5 +5,7 @@
 
 output/*
 
+backup/*
+
 kaigai-go-scraper
 *.log
