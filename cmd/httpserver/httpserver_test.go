@@ -60,6 +60,7 @@ func TestHttpserver(t *testing.T) {
 
 	common.MockEnv("server_port", "9999")
 	rootUrl := fmt.Sprintf("http://localhost:%s/", common.GetEnv("server_port"))
+	common.MockEnv("server_host", "http://localhost")
 	publishUrl := fmt.Sprintf("%spublish", rootUrl)
 
 	cli := &http.Client{}
@@ -124,7 +125,7 @@ func TestHttpserver(t *testing.T) {
 
 		html := string(htmlBytes)
 
-		require.Equal(t, http.StatusOK, response.StatusCode)
+		require.Equal(t, http.StatusCreated, response.StatusCode)
 		require.Contains(t, string(html), "Success")
 
 		unpublished := pr.FindUnpublished()

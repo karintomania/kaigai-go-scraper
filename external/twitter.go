@@ -58,7 +58,6 @@ func RefreshToken(refreshToken string) (RefreshTokenResponse, error) {
 	formData.Set("client_id", common.GetEnv("x_client_id"))
 	formData.Set("refresh_token", refreshToken)
 
-	slog.Info("debug form data", "formdata", formData.Encode())
 	payload := strings.NewReader(formData.Encode())
 
 	req, _ := http.NewRequest("POST", tokenUrl, payload)

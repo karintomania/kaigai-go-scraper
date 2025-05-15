@@ -7,7 +7,7 @@ import (
 
 // key-value
 type Kv struct {
-	Key string
+	Key   string
 	Value string
 }
 

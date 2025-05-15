@@ -7,6 +7,10 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/external"
 )
 
+type Poster interface {
+	Post(content string) error
+}
+
 type TwitterClient struct {
 	kvr *db.KvRepository
 }
@@ -33,8 +37,7 @@ func (tc *TwitterClient) Post(content string) error {
 }
 
 // Renew refresh token and return access token
-func (tc *TwitterClient) getAccessToken(
-) (string, error) {
+func (tc *TwitterClient) getAccessToken() (string, error) {
 	// get current refresh token
 	oldRefreshToken := tc.kvr.FindByKey("x_refresh_token")
 
