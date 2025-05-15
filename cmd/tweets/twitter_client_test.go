@@ -24,7 +24,7 @@ func TestTwitterClient(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if requestCount == 0 {
 			assertRefreshTokenRequest(t, w, r)
-			requestCount ++
+			requestCount++
 		} else {
 			assertPostRequest(t, w, r)
 		}

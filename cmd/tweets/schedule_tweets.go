@@ -2,6 +2,7 @@ package tweets
 
 import (
 	"bytes"
+	"fmt"
 	"log/slog"
 	"math/rand"
 	"strings"
@@ -24,11 +25,16 @@ type ScheduleTweetsCmd struct {
 	tr *db.TweetRepository
 }
 
-func (cmd *ScheduleTweetsCmd) Run(dateStr string) error {
-	pages := cmd.pr.FindByDate(dateStr)
+func (cmd *ScheduleTweetsCmd) Run(dateStr string, pageIds []int) error {
+	for _, pageId := range pageIds {
+		page := cmd.pr.FindById(pageId)
 
-	for _, page := range pages {
-		content := cmd.createTweetContent(&page)
+		if page == nil {
+			return fmt.Errorf("Page not found for ID: %d", pageId)
+		}
+
+		content := cmd.createTweetContent(page)
+
 		scheduledDate := cmd.generateScheduleDate(page.Date)
 
 		tweet := db.Tweet{

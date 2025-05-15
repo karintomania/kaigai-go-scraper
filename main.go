@@ -9,6 +9,7 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/cmd"
 	"github.com/karintomania/kaigai-go-scraper/cmd/httpserver"
 	"github.com/karintomania/kaigai-go-scraper/cmd/scrape"
+	"github.com/karintomania/kaigai-go-scraper/cmd/tweets"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -63,5 +64,13 @@ func main() {
 		s := httpserver.NewServer()
 
 		s.Start()
+	}
+
+	if mode == "tweet" {
+		tweetCmd := tweets.NewPostScheduledCmd()
+
+		if err := tweetCmd.Run(date); err != nil {
+			slog.Error("Error posting scheduled tweets", "error", err)
+		}
 	}
 }

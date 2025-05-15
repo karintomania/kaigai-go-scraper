@@ -84,6 +84,38 @@ func (r *PageRepository) Insert(page *Page) {
 	page.Id = int(id)
 }
 
+func (r *PageRepository) FindById(id int) *Page {
+	query := "SELECT * FROM pages WHERE id = ?"
+
+	row := r.dbConn.QueryRow(query, id)
+
+	page := Page{}
+	err := row.Scan(
+		&page.Id,
+		&page.ExtId,
+		&page.Date,
+		&page.Html,
+		&page.Title,
+		&page.TranslatedTitle,
+		&page.Slug,
+		&page.Url,
+		&page.RefUrl,
+		&page.Tags,
+		&page.Translated,
+		&page.Published,
+		&page.CreatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		log.Panicln(err)
+	}
+
+	return &page
+}
+
 func (r *PageRepository) FindByDate(date string) []Page {
 	query := "SELECT * FROM pages WHERE date = ?"
 

@@ -16,18 +16,21 @@ const (
 <body>
 <h2><a href="{{.Host}}">Open Blog</a></h2>
 {{range $key, $value := .DatePagesMap}}
+<form method="POST" action="/publish">
 <h1>{{$key}}</h1>
 {{range $value}}
+	<div>
 	<h2>{{.TranslatedTitle}}</h2>
-	<a href={{.RefUrl}}>{{.Title}}</a>
+	<a href={{.RefUrl}}>{{.Title}}</a><br>
+	Tweet: <input type="checkbox" name="page_ids" value="{{.Id}}" />
+	</div>
 {{end}}
 {{else}}
 	<h1>All clear!</h1>
 	<p>Nothing to publish.</p>
 {{end}}
-	<form method="POST" action="/publish">
-		<input type="submit" value="Publish" />
-	</form>
+<input type="submit" value="Publish" />
+</form>
 </body>
 </html>
 `
@@ -115,7 +118,7 @@ func (gph *GetPageHandler) getPages(w http.ResponseWriter, r *http.Request) {
 		struct {
 			DatePagesMap DatePagesMap
 			Header       string
-			Host       string
+			Host         string
 		}{
 			datePagesMap,
 			HEADER_TEMPLATE,

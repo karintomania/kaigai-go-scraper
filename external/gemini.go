@@ -32,7 +32,7 @@ func (gr *geminiResponse) getText() (string, error) {
 	if len(gr.Candidates) == 0 ||
 		len(gr.Candidates[0].Content.Parts) == 0 {
 		slog.Error("Invalid gemini response", "gr", gr)
-		return "", fmt.Errorf("Invalid gemini response: %v", gr);
+		return "", fmt.Errorf("Invalid gemini response: %v", gr)
 	}
 
 	return gr.Candidates[0].Content.Parts[0].Text, nil

@@ -35,7 +35,7 @@ func TestScheduleTweets(t *testing.T) {
 	pr.Insert(&page)
 
 	// Run the command
-	err := cmd.Run(testDate)
+	err := cmd.Run(testDate, []int{page.Id})
 	require.NoError(t, err)
 
 	// Verify that the expected pages were processed
