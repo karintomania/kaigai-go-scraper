@@ -15,6 +15,7 @@ import (
 type Server struct {
 	dbConn     *sql.DB
 	pr         *db.PageRepository
+	tr         *db.TweetRepository
 	push       pushFunc
 	httpServer *http.Server
 }
@@ -25,6 +26,7 @@ func NewServer() *Server {
 	return &Server{
 		dbConn: dbConn,
 		pr:     db.NewPageRepository(dbConn),
+		tr:     db.NewTweetRepository(dbConn),
 		push: func() (string, error) {
 			options := []string{"push"}
 			return common.RunGitCommand(options)
@@ -53,7 +55,7 @@ func (s *Server) Start() {
 
 	http.HandleFunc("/", gph.getPages)
 
-	ph := NewPublishHandler(s.push, s.pr)
+	ph := NewPublishHandler(s.push, s.pr, s.tr)
 
 	http.HandleFunc("/publish", ph.handle)
 
