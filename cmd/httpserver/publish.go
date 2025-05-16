@@ -8,6 +8,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/karintomania/kaigai-go-scraper/cmd/tweets"
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
@@ -31,10 +32,19 @@ type PublishHandler struct {
 	pr       *db.PageRepository
 }
 
-func NewPublishHandler(push pushFunc, pr *db.PageRepository) *PublishHandler {
+func NewPublishHandler(
+	push pushFunc,
+	pr *db.PageRepository,
+	tr *db.TweetRepository,
+) *PublishHandler {
+	st := tweets.NewScheduleTweetsCmd(pr, tr)
+
 	return &PublishHandler{
 		push: push,
 		pr:   pr,
+		schedule: func(dateStr string, pageIds []int) error {
+			return st.Run(dateStr, pageIds)
+		},
 	}
 }
 

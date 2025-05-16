@@ -25,6 +25,13 @@ type ScheduleTweetsCmd struct {
 	tr *db.TweetRepository
 }
 
+func NewScheduleTweetsCmd(
+	pr *db.PageRepository,
+	tr *db.TweetRepository,
+) *ScheduleTweetsCmd {
+	return &ScheduleTweetsCmd{pr, tr}
+}
+
 func (cmd *ScheduleTweetsCmd) Run(dateStr string, pageIds []int) error {
 	for _, pageId := range pageIds {
 		page := cmd.pr.FindById(pageId)
