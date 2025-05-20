@@ -36,6 +36,7 @@ func (tc *TwitterClient) Post(content string) error {
 	return nil
 }
 
+// TODO: shouldn't be calling this for every tweets
 // Renew refresh token and return access token
 func (tc *TwitterClient) getAccessToken() (string, error) {
 	// get current refresh token
