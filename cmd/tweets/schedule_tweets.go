@@ -61,6 +61,7 @@ func (cmd *ScheduleTweetsCmd) createTweetContent(page *db.Page) string {
 	var buf bytes.Buffer
 
 	yearMonth := strings.ReplaceAll(page.Date[:7], "-", "_")
+	slug := fmt.Sprintf("%s_%s", strings.ReplaceAll(page.Date, "-", "_"), page.Slug)
 
 	err := tmpl.Execute(&buf, struct {
 		Title     string
@@ -70,7 +71,7 @@ func (cmd *ScheduleTweetsCmd) createTweetContent(page *db.Page) string {
 	}{
 		page.TranslatedTitle,
 		yearMonth,
-		page.Slug,
+		slug,
 		"https://www.kaigai-tech-matome.com/posts",
 	})
 
