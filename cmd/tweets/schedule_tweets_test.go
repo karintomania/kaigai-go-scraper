@@ -44,10 +44,7 @@ func TestScheduleTweets(t *testing.T) {
 	require.Equal(t, page.Id, tweets[0].PageId)
 	require.Equal(t, testDate, tweets[0].Date)
 
-	expectedContent := `「Test Title」に対する海外の反応をまとめました。
-#海外の反応 #テックニュース
-
-https://www.kaigai-tech-matome.com/posts/2025_10/test_slug/`
+	expectedContent := `「Test Title」に対する海外の反応をまとめました。\n#海外の反応 #テックニュース\n\nhttps://www.kaigai-tech-matome.com/posts/2025_10/test_slug/`
 	require.Equal(t, expectedContent, tweets[0].Content)
 	require.Equal(t, false, tweets[0].Published)
 

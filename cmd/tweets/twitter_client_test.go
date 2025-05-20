@@ -48,7 +48,7 @@ func assertRefreshTokenRequest(t *testing.T, w http.ResponseWriter, r *http.Requ
 	require.NoError(t, r.ParseForm())
 	require.Equal(t, "POST", r.Method)
 	require.Equal(t, "/2/oauth2/token", r.URL.String())
-	require.Equal(t, "Bearer bearer_token", r.Header.Get("Authorization"))
+	require.Equal(t, "Basic bearer_token", r.Header.Get("Authorization"))
 	require.Equal(t, "client_id", r.PostFormValue("client_id"))
 	require.Equal(t, "refresh_token", r.FormValue("refresh_token"))
 

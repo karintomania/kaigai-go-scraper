@@ -148,7 +148,7 @@ func TestHttpserver(t *testing.T) {
 		html := string(htmlBytes)
 
 		require.Equal(t, http.StatusInternalServerError, response.StatusCode)
-		require.Contains(t, string(html), "Something went wrong: mock error")
+		require.Contains(t, string(html), "Something went wrong pushing git: mock error")
 	})
 
 	require.NoError(t, s.Shutdown())

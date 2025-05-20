@@ -8,6 +8,6 @@ import (
 
 func TestPost(t *testing.T) {
 	t.Skip("This test is only for E2E test")
-	Post()
+	Post("test content", "test bearer key")
 	require.True(t, true)
 }
