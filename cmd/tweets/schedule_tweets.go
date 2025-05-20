@@ -39,7 +39,7 @@ func (cmd *ScheduleTweetsCmd) Run(dateStr string, pageIds []int) error {
 
 		content := cmd.createTweetContent(page)
 
-		scheduledDate := cmd.generateScheduleDate(page.Date)
+		scheduledDate := cmd.generateScheduleDate(dateStr)
 
 		tweet := db.Tweet{
 			PageId:      page.Id,
@@ -68,7 +68,7 @@ func (cmd *ScheduleTweetsCmd) createTweetContent(page *db.Page) string {
 		Slug      string
 		PostUrl   string
 	}{
-		page.Title,
+		page.TranslatedTitle,
 		yearMonth,
 		page.Slug,
 		"https://www.kaigai-tech-matome.com/posts",

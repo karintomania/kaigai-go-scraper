@@ -22,7 +22,7 @@ const (
 	<div>
 	<h2>{{.TranslatedTitle}}</h2>
 	<a href={{.RefUrl}}>{{.Title}}</a><br>
-	Tweet: <input type="checkbox" name="page_ids" value="{{.Id}}" />
+	<label for="check_{{.Id}}">Tweet: </label><input type="checkbox" id="check_{{.Id}}" name="page_ids" value="{{.Id}}" />
 	</div>
 {{end}}
 {{else}}

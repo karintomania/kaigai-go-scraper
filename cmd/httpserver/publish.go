@@ -126,8 +126,6 @@ func (ph *PublishHandler) scheduleTweet(r *http.Request) error {
 
 	pageIds := make([]int, 0, 10)
 
-	slog.Info("page_ids", "page_ids", r.Form["page_ids"])
-
 	for _, pageId := range r.Form["page_ids"] {
 		pageIdInt, err := strconv.Atoi(pageId)
 		if err != nil {
