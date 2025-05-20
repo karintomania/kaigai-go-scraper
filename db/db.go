@@ -46,6 +46,7 @@ func GetTestDbConnection() (*sql.DB, func()) {
 	return dbConn, cleanup
 }
 
+// TODO: add keys to kvs
 func Migrate(dbConn *sql.DB) {
 	repos := []TableCreater{
 		NewLinkRepository(dbConn),

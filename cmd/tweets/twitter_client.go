@@ -44,6 +44,7 @@ func (tc *TwitterClient) getAccessToken() (string, error) {
 	// call refresh token endpoint
 	res, err := external.RefreshToken(oldRefreshToken)
 
+
 	if err != nil {
 		slog.Error("error on refreshing token", "err", err)
 		return "", err

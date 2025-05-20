@@ -1,9 +1,9 @@
 package tweets
 
 import (
+	"database/sql"
 	"log/slog"
 
-	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
@@ -13,10 +13,7 @@ type PostScheduledCmd struct {
 	tc  Poster
 }
 
-func NewPostScheduledCmd() *PostScheduledCmd {
-	dbConn := db.GetDbConnection(common.GetEnv("db_path"))
-	defer dbConn.Close()
-
+func NewPostScheduledCmd(dbConn *sql.DB) *PostScheduledCmd {
 	tr := db.NewTweetRepository(dbConn)
 	kvr := db.NewKvRepository(dbConn)
 

@@ -10,6 +10,8 @@ import (
 	"github.com/karintomania/kaigai-go-scraper/cmd/httpserver"
 	"github.com/karintomania/kaigai-go-scraper/cmd/scrape"
 	"github.com/karintomania/kaigai-go-scraper/cmd/tweets"
+	"github.com/karintomania/kaigai-go-scraper/common"
+	"github.com/karintomania/kaigai-go-scraper/db"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -67,9 +69,14 @@ func main() {
 	}
 
 	if mode == "tweet" {
-		tweetCmd := tweets.NewPostScheduledCmd()
+		dbConn := db.GetDbConnection(common.GetEnv("db_path"))
+		defer dbConn.Close()
 
-		if err := tweetCmd.Run(date); err != nil {
+		tweetCmd := tweets.NewPostScheduledCmd(dbConn)
+
+		today := time.Now().Format("2006-01-02")
+
+		if err := tweetCmd.Run(today); err != nil {
 			slog.Error("Error posting scheduled tweets", "error", err)
 		}
 	}
