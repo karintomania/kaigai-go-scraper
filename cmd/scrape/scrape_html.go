@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -252,7 +253,12 @@ func selectRelevantComments(
 		}
 	}
 
-	return result[:maxCommentNum]
+	end := int(math.Min(
+		float64(len(result)),
+		float64(maxCommentNum),
+		))
+
+	return result[:end]
 }
 
 func pruneChildrenComments(commentsPtr *[]db.Comment, maxChildCommentNum int) {
