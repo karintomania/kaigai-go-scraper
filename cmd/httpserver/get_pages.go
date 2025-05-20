@@ -40,6 +40,7 @@ body {
     margin: 20px;
     background-color: #f4f4f4;
     color: #333;
+	font-size: 1.1rem;
 }
 h1 {
     color: #0056b3;
