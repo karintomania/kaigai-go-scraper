@@ -22,7 +22,7 @@ const (
 	<div>
 	<h2>{{.TranslatedTitle}}</h2>
 	<a href={{.RefUrl}}>{{.Title}}</a><br>
-	<label for="check_{{.Id}}">Tweet: </label><input type="checkbox" id="check_{{.Id}}" name="page_ids" value="{{.Id}}" />
+	<div class="tweet"><label for="check_{{.Id}}">Tweet: </label><input type="checkbox" id="check_{{.Id}}" name="page_ids" value="{{.Id}}" /></div>
 	</div>
 {{end}}
 {{else}}
@@ -34,7 +34,8 @@ const (
 </body>
 </html>
 `
-	HEADER_TEMPLATE = `<style>
+	HEADER_TEMPLATE = `<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
 body {
     font-family: sans-serif;
     margin: 20px;
@@ -74,6 +75,10 @@ p {
 a {
     color: #007bff;
     text-decoration: none;
+}
+.tweet {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
 }
 a:hover {
     text-decoration: underline;
