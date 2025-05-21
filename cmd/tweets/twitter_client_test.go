@@ -39,6 +39,8 @@ func TestTwitterClient(t *testing.T) {
 	err := tc.Post("test")
 	require.NoError(t, err)
 
+	require.Equal(t, tc.accessToken, "access_token")
+
 	// assert updated token
 	updatedToken := kvr.FindByKey("x_refresh_token")
 	require.Equal(t, "new_refresh_token", updatedToken)

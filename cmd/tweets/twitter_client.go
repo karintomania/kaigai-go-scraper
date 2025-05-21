@@ -13,10 +13,11 @@ type Poster interface {
 
 type TwitterClient struct {
 	kvr *db.KvRepository
+	accessToken string
 }
 
 func NewTwitterClient(kvr *db.KvRepository) *TwitterClient {
-	return &TwitterClient{kvr}
+	return &TwitterClient{kvr, ""}
 }
 
 func (tc *TwitterClient) Post(content string) error {
@@ -39,6 +40,10 @@ func (tc *TwitterClient) Post(content string) error {
 // TODO: shouldn't be calling this for every tweets
 // Renew refresh token and return access token
 func (tc *TwitterClient) getAccessToken() (string, error) {
+	if tc.accessToken != "" {
+		return tc.accessToken, nil
+	}
+
 	// get current refresh token
 	oldRefreshToken := tc.kvr.FindByKey("x_refresh_token")
 
@@ -53,6 +58,8 @@ func (tc *TwitterClient) getAccessToken() (string, error) {
 
 	tc.kvr.Update(&db.Kv{Key: "x_refresh_token", Value: res.RefreshToken})
 
+	tc.accessToken = res.AccessToken
+
 	//return
-	return res.AccessToken, nil
+	return tc.accessToken, nil
 }
