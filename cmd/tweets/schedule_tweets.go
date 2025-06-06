@@ -2,6 +2,7 @@ package tweets
 
 import (
 	"bytes"
+	"fmt"
 	"log/slog"
 	"math/rand"
 	"strings"
@@ -12,10 +13,7 @@ import (
 )
 
 const (
-	TWEET_TEMPLATE = `「{{.Title}}」に対する海外の反応をまとめました。
-#海外の反応 #テックニュース
-
-{{.PostUrl}}/{{.YearMonth}}/{{.Slug}}/`
+	TWEET_TEMPLATE = `「{{.Title}}」に対する海外の反応をまとめました。\n#海外の反応 #テックニュース\n\n{{.PostUrl}}/{{.YearMonth}}/{{.Slug}}/`
 	date_str_format = "2006-01-02"
 )
 
@@ -24,12 +22,24 @@ type ScheduleTweetsCmd struct {
 	tr *db.TweetRepository
 }
 
-func (cmd *ScheduleTweetsCmd) Run(dateStr string) error {
-	pages := cmd.pr.FindByDate(dateStr)
+func NewScheduleTweetsCmd(
+	pr *db.PageRepository,
+	tr *db.TweetRepository,
+) *ScheduleTweetsCmd {
+	return &ScheduleTweetsCmd{pr, tr}
+}
 
-	for _, page := range pages {
-		content := cmd.createTweetContent(&page)
-		scheduledDate := cmd.generateScheduleDate(page.Date)
+func (cmd *ScheduleTweetsCmd) Run(dateStr string, pageIds []int) error {
+	for _, pageId := range pageIds {
+		page := cmd.pr.FindById(pageId)
+
+		if page == nil {
+			return fmt.Errorf("Page not found for ID: %d", pageId)
+		}
+
+		content := cmd.createTweetContent(page)
+
+		scheduledDate := cmd.generateScheduleDate(dateStr)
 
 		tweet := db.Tweet{
 			PageId:      page.Id,
@@ -51,6 +61,7 @@ func (cmd *ScheduleTweetsCmd) createTweetContent(page *db.Page) string {
 	var buf bytes.Buffer
 
 	yearMonth := strings.ReplaceAll(page.Date[:7], "-", "_")
+	slug := fmt.Sprintf("%s_%s", strings.ReplaceAll(page.Date, "-", "_"), page.Slug)
 
 	err := tmpl.Execute(&buf, struct {
 		Title     string
@@ -58,9 +69,9 @@ func (cmd *ScheduleTweetsCmd) createTweetContent(page *db.Page) string {
 		Slug      string
 		PostUrl   string
 	}{
-		page.Title,
+		page.TranslatedTitle,
 		yearMonth,
-		page.Slug,
+		slug,
 		"https://www.kaigai-tech-matome.com/posts",
 	})
 

@@ -23,37 +23,36 @@ func TestScheduleTweets(t *testing.T) {
 	}
 
 	// Define the test date
-	testDate := "2025-10-01"
-	scheduledDateMax := "2025-10-08"
+	tweetDate := "2025-10-01"
+	testDate := "2025-10-07"
+	scheduledDateMax := "2025-10-14"
 
 	page := db.Page{
 		Slug:  "test_slug",
 		Title: "Test Title",
-		Date:  testDate,
+		TranslatedTitle: "テストタイトル",
+		Date:  tweetDate,
 	}
 
 	pr.Insert(&page)
 
 	// Run the command
-	err := cmd.Run(testDate)
+	err := cmd.Run(testDate, []int{page.Id})
 	require.NoError(t, err)
 
 	// Verify that the expected pages were processed
 	tweets := tr.FindUnpublishedByScheduledDate(scheduledDateMax)
 
 	require.Equal(t, page.Id, tweets[0].PageId)
-	require.Equal(t, testDate, tweets[0].Date)
+	require.Equal(t, tweetDate, tweets[0].Date)
 
-	expectedContent := `「Test Title」に対する海外の反応をまとめました。
-#海外の反応 #テックニュース
-
-https://www.kaigai-tech-matome.com/posts/2025_10/test_slug/`
+	expectedContent := `「テストタイトル」に対する海外の反応をまとめました。\n#海外の反応 #テックニュース\n\nhttps://www.kaigai-tech-matome.com/posts/2025_10/2025_10_01_test_slug/`
 	require.Equal(t, expectedContent, tweets[0].Content)
 	require.Equal(t, false, tweets[0].Published)
 
-	scheduleDay, err := strconv.Atoi(tweets[0].ScheduledAt[9:])
+	scheduleDay, err := strconv.Atoi(tweets[0].ScheduledAt[8:])
 	require.NoError(t, err)
 
-	require.GreaterOrEqual(t, scheduleDay, 2)
-	require.LessOrEqual(t, scheduleDay, 8)
+	require.GreaterOrEqual(t, scheduleDay, 7)
+	require.LessOrEqual(t, scheduleDay, 14)
 }

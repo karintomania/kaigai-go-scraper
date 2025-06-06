@@ -16,27 +16,32 @@ const (
 <body>
 <h2><a href="{{.Host}}">Open Blog</a></h2>
 {{range $key, $value := .DatePagesMap}}
+<form method="POST" action="/publish">
 <h1>{{$key}}</h1>
 {{range $value}}
+	<div>
 	<h2>{{.TranslatedTitle}}</h2>
-	<a href={{.RefUrl}}>{{.Title}}</a>
+	<a href={{.RefUrl}}>{{.Title}}</a><br>
+	<div class="tweet"><label for="check_{{.Id}}">Tweet: </label><input type="checkbox" id="check_{{.Id}}" name="page_ids" value="{{.Id}}" /></div>
+	</div>
 {{end}}
 {{else}}
 	<h1>All clear!</h1>
 	<p>Nothing to publish.</p>
 {{end}}
-	<form method="POST" action="/publish">
-		<input type="submit" value="Publish" />
-	</form>
+<input type="submit" value="Publish" />
+</form>
 </body>
 </html>
 `
-	HEADER_TEMPLATE = `<style>
+	HEADER_TEMPLATE = `<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
 body {
     font-family: sans-serif;
     margin: 20px;
     background-color: #f4f4f4;
     color: #333;
+	font-size: 1.1rem;
 }
 h1 {
     color: #0056b3;
@@ -70,6 +75,10 @@ p {
 a {
     color: #007bff;
     text-decoration: none;
+}
+.tweet {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
 }
 a:hover {
     text-decoration: underline;
@@ -115,7 +124,7 @@ func (gph *GetPageHandler) getPages(w http.ResponseWriter, r *http.Request) {
 		struct {
 			DatePagesMap DatePagesMap
 			Header       string
-			Host       string
+			Host         string
 		}{
 			datePagesMap,
 			HEADER_TEMPLATE,

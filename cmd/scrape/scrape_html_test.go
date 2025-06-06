@@ -14,6 +14,9 @@ func TestScrapeHtml(t *testing.T) {
 	dbConn, cleanup := db.GetTestDbConnection()
 	defer cleanup()
 
+	common.MockEnv("max_comments_num", "10")
+	common.MockEnv("max_reply_per_comment_num", "5")
+
 	lr := db.NewLinkRepository(dbConn)
 	pr := db.NewPageRepository(dbConn)
 	cr := db.NewCommentRepository(dbConn)

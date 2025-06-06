@@ -1,30 +1,38 @@
 package tweets
 
 import (
+	"database/sql"
 	"log/slog"
 
 	"github.com/karintomania/kaigai-go-scraper/db"
 )
 
 type PostScheduledCmd struct {
-	tr        *db.TweetRepository
-	postTweet func(tweetContent string) error
+	tr  *db.TweetRepository
+	kvr *db.KvRepository
+	tc  Poster
 }
 
-// func NewPostScheduledCmd( tr *db.TweetRepository) *PostScheduledCmd {
-// 	return &PostScheduledCmd{
-// 		tr:         tr,
-// 		postTweet:  postTweet,
-// 	}
-// }
+func NewPostScheduledCmd(dbConn *sql.DB) *PostScheduledCmd {
+	tr := db.NewTweetRepository(dbConn)
+	kvr := db.NewKvRepository(dbConn)
+
+	return &PostScheduledCmd{
+		tr:  tr,
+		kvr: kvr,
+		tc:  NewTwitterClient(kvr),
+	}
+}
 
 func NewTestPostScheduledCmd(
 	tr *db.TweetRepository,
-	postTweet func(tweetContent string) error,
+	kvr *db.KvRepository,
+	tc Poster,
 ) *PostScheduledCmd {
 	return &PostScheduledCmd{
-		tr:        tr,
-		postTweet: postTweet,
+		tr:  tr,
+		kvr: kvr,
+		tc:  tc,
 	}
 }
 
@@ -39,7 +47,7 @@ func (cmd *PostScheduledCmd) Run(dateStr string) error {
 	for _, tweet := range tweets {
 		slog.Info("Posting tweet", "tweet_id", tweet.Id)
 
-		err := cmd.postTweet(tweet.Content)
+		err := cmd.tc.Post(tweet.Content)
 		if err != nil {
 			slog.Error("error on posting tweet", "tweet_id", tweet.Id, "error", err)
 			return err
