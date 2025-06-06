@@ -20,34 +20,28 @@ const (
 %s
 """
 
-この入力jsonから以下のフォーマットのJsonをこれから述べるルールにしたがって生成して。
+# ゴール
+このjsonのcontentを翻訳しscoreの値を計算して
 
-# idフィールド
-jsonのidは入力jsonのidをそのまま使ってください
+# **最重要**
+* JSON形式が正しいようにして
+* コメントは必ず200字以内に要約してね
+* 翻訳後のcommentには日本語、英語の固有名詞だけ(他の言語は使わない)があるようにして
 
-# contentフィールド
-jsonのcontentの値は入力jsonのcontentルールに従って翻訳・要約して。
-- カジュアルなタメ口の日本語に翻訳して
-- 翻訳が200字以上になるコメントは200字以内に要約して
-- 記号は使わず翻訳に含めるときは全角の記号に変換して。**特に'と", \はJsonが壊れるので’と”に変換するか省略して**
-- 固有名詞は英語のままにして
-- 改行は\\nではなく<br>にして
+# タスク
+1.  contentの翻訳と要約:
+- 各contentフィールドを200字以内のタメ口の日本語に要約して
+- 記号は基本的に削除、必要なら全角に変換し、'は’、"は”、\は＼にして
+- 改行は<br>を使用してね
+- 対応する日本語がない英語の固有名詞（例: JavaScript, LLM）はそのまま使用しても大丈夫。
+- URLは省略しないこと。URLを入れるなら200字を超えてもいい。
+2. scoreの採点:
+- 各コメントのscoreを0から100の範囲で採点して。
+- 役に立つとか面白いコメントは高得点、情報が少ないか無関係なコメントは低得点にして。
+- 入力のscoreの値は無視して。
 
-# scoreフィールド
-jsonのscoreはそれぞれのコメントを以下のルールに従って採点して。
-- 点数は0から100
-- コメントが役に立つ、面白いなら高得点、情報量が少ないものや関係のないコメントは低い点にする
-
-# Jsonに変換
-- 返事はバックティックで囲わず平文のJsonで返事して
-- id, content, scoreは必須項目。
-- 入力と出力のコメント数が同じになるようにして
-- フィールド内の"は全角に変換して
-- Jsonのバリデーションをしてから返事して
-- 以下のJSONのとおりに出力して
-"""
-{"comments": [{"id": 1, "content": "翻訳コメント", "score": 90}]}
-"""`
+# 出力形式
+入力と同じJSON形式で出力して。`
 
 	PROMPT_TITLE = `次のHacker Newsの記事タイトル「%s」について以下のタスクをしてください。
 ステップ１：タイトルを以下のルールにしたがって日本語に訳してください。
@@ -236,10 +230,15 @@ func (tp *TranslatePage) translateCommentChunk(title string, comments []db.Comme
 
 	prompt := fmt.Sprintf(PROMPT_COMMENT, title, string(jsonComments))
 
+
 	answer, err := tp.callAi(prompt)
 	if err != nil {
 		return nil, err
 	}
+
+	// For debugging
+	// slog.Info(prompt)
+	// slog.Info(answer)
 
 	var result CommentsForTranslation
 
