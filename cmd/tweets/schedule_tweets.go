@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	TWEET_TEMPLATE = `「{{.Title}}」に対する海外の反応をまとめました。\n#海外の反応 #テックニュース\n\n{{.PostUrl}}/{{.YearMonth}}/{{.Slug}}/`
+	TWEET_TEMPLATE = `「{{.Title}}」に対する海外の反応をまとめました。\n#プログラミング #海外の反応 #テックニュース\n\n{{.PostUrl}}/{{.YearMonth}}/{{.Slug}}/`
 	date_str_format = "2006-01-02"
 )
 

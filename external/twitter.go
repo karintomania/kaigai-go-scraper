@@ -90,8 +90,5 @@ func RefreshToken(refreshToken string) (RefreshTokenResponse, error) {
 		return response, err
 	}
 
-	fmt.Println(res)
-	fmt.Println(string(body))
-
 	return response, nil
 }
