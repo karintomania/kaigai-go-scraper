@@ -165,6 +165,28 @@ func getPageAndComments(page *db.Page) (*db.Page, []db.Comment) {
 
 	comments := make([]db.Comment, 0)
 
+	// get OP comment if exists
+	fatitem := doc.Find("table.fatitem")
+
+	opContent := fatitem.Find("div.toptext")
+	slog.Info("opcontent length", "length:", opContent.Length())
+	if opContent.Length() > 0 {
+		commentedAtRaw := fatitem.Find("span.age").AttrOr("title", "2025-01-01T01:02:03 1738909416")
+		commentedAt := strings.Split(commentedAtRaw, " ")[0]
+
+		opComment := db.Comment{
+			ExtCommentId: fmt.Sprintf("op_%s", page.ExtId),
+			PageId:       page.Id,
+			UserName:     fatitem.Find("a.hnuser").Text(),
+			Content:      strings.TrimSpace(opContent.Text()),
+			Indent:       0,
+			Reply:        9999, // just to make sure the op comment is not pruned
+			CommentedAt:  commentedAt,
+		}
+
+		comments = append(comments, opComment)
+	}
+
 	// loop all comments
 	doc.Find("tr.athing.comtr").Each(func(i int, s *goquery.Selection) {
 		// get reply
@@ -256,7 +278,7 @@ func selectRelevantComments(
 	end := int(math.Min(
 		float64(len(result)),
 		float64(maxCommentNum),
-		))
+	))
 
 	return result[:end]
 }

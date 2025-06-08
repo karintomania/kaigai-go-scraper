@@ -83,7 +83,7 @@ func TestPublish(t *testing.T) {
 	}
 
 	formData := url.Values{}
-	
+
 	formData.Add("page_ids", "1")
 	formData.Add("page_ids", "2")
 

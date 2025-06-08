@@ -1,11 +1,81 @@
 package scrape
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/karintomania/kaigai-go-scraper/common"
 	"github.com/karintomania/kaigai-go-scraper/db"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	htmlWithOp = `<html>
+        <head>
+            <title>Sample Title | Example</title>
+            <link rel="canonical" href="https://example.com/main-url" />
+        </head>
+        <body>
+			<table class="fatitem">
+				<tr><td>
+				<a class="hnuser">op name</a>
+				<span class="age" title="2025-01-01T02:03:04 1738909416">
+				<div class="toptext">This is a comment from OP</div>
+				</td></tr>
+			</table>
+            <a href="https://example.com/ref-url">Sample Title</a>
+            <table>
+                <tr class="athing comtr" id="101">
+                    <td class="ind" indent="1"></td>
+                    <td><a class="togg clicky" n="100"></a></td>
+                    <td>
+                        <a class="hnuser">user1</a>
+                        <span class="age" title="2025-01-01T01:02:03 1738909416">
+                        <div class="commtext">Test comment 1</div>
+                    </td>
+                </tr>
+                <tr class="athing comtr" id="102">
+                    <td class="ind" indent="2"></td>
+                    <td><a class="togg clicky" n="200"></a></td>
+                    <td>
+                        <a class="hnuser">user2</a>
+                        <span class="age" title="2025-01-02T01:02:03 1738909416">
+                        <div class="commtext">Test comment 2</div>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>`
+
+	htmlWithoutOp = `<html>
+        <head>
+            <title>Sample Title | Example</title>
+            <link rel="canonical" href="https://example.com/main-url" />
+        </head>
+        <body>
+            <a href="https://example.com/ref-url">Sample Title</a>
+            <table>
+                <tr class="athing comtr" id="101">
+                    <td class="ind" indent="1"></td>
+                    <td><a class="togg clicky" n="100"></a></td>
+                    <td>
+                        <a class="hnuser">user1</a>
+                        <span class="age" title="2025-01-01T01:02:03 1738909416">
+                        <div class="commtext">Test comment 1</div>
+                    </td>
+                </tr>
+                <tr class="athing comtr" id="102">
+                    <td class="ind" indent="2"></td>
+                    <td><a class="togg clicky" n="200"></a></td>
+                    <td>
+                        <a class="hnuser">user2</a>
+                        <span class="age" title="2025-01-02T01:02:03 1738909416">
+                        <div class="commtext">Test comment 2</div>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>`
 )
 
 func TestScrapeHtml(t *testing.T) {
@@ -22,95 +92,85 @@ func TestScrapeHtml(t *testing.T) {
 	cr := db.NewCommentRepository(dbConn)
 	scrapeHtml := NewScrapeHtml(lr, pr, cr)
 
-	htmlContent := `<html>
-        <head>
-            <title>Sample Title | Example</title>
-            <link rel="canonical" href="https://example.com/main-url" />
-        </head>
-        <body>
-            <a href="https://example.com/ref-url">Sample Title</a>
-            <table>
-                <tr class="athing comtr" id="123">
-                    <td class="ind" indent="0"></td>
-                    <td><a class="togg clicky" n="100"></a></td>
-                    <td>
-                        <a class="hnuser">user1</a>
-                        <span class="age" title="2025-01-02T03:04:05 1738909416">
-                        <div class="commtext">Test comment 1</div>
-                    </td>
-                </tr>
-                <tr class="athing comtr" id="456">
-                    <td class="ind" indent="1"></td>
-                    <td><a class="togg clicky" n="50"></a></td>
-                    <td>
-                        <a class="hnuser">user2</a>
-                        <span class="age" title="2024-05-19T04:06:08 1738909416">
-                        <div class="commtext">Test comment 2</div>
-                    </td>
-                </tr>
-            </table>
-        </body>
-    </html>`
-
-	date := "2025-01-01"
-	page := &db.Page{
-		Id:    99,
-		ExtId: "1",
-		Title: "Test Title, Which is Made !WAY! Too long intentionally to test the slug",
-		Date:  date,
-		Html:  htmlContent,
+	wantOpComment := db.Comment{
+		ExtCommentId: "op_12",
+		UserName:     "op name",
+		Content:      "This is a comment from OP",
+		Indent:       0,
+		Reply:        9999,
+		CommentedAt:  "2025-01-01T02:03:04",
 	}
 
-	pr.Insert(page)
+	wantComments := make([]db.Comment, 0, 3)
+
+	for i := 1; i < 3; i++ {
+		wantComments = append(wantComments, db.Comment{
+			ExtCommentId: fmt.Sprintf("10%d", i),
+			UserName:     fmt.Sprintf("user%d", i),
+			Content:      fmt.Sprintf("Test comment %d", i),
+			Indent:       i,
+			Reply:        100 * i,
+			CommentedAt:  fmt.Sprintf("2025-01-0%dT01:02:03", i),
+		})
+	}
+
+	date := "2025-01-01"
 
 	t.Run("scrapePages scrape correct info", func(t *testing.T) {
-		err := scrapeHtml.scrapePages(date)
-		require.NoError(t, err)
+		dataTable := []struct {
+			Name         string
+			Html         string
+			WantComments []db.Comment
+		}{
+			{"Article without OP", htmlWithoutOp, wantComments},
+			{"Article with OP", htmlWithOp, append([]db.Comment{wantOpComment}, wantComments...)},
+		}
 
-		resultPage := pr.FindByDate(date)[0]
-		resultComments := cr.FindByPageId(page.Id)
+		for _, data := range dataTable {
+			pr.Truncate()
+			cr.Truncate()
 
-		require.Equal(t, "test_title_which_is_made_way_too_long", resultPage.Slug)
+			page := &db.Page{
+				Id:    99,
+				ExtId: "12",
+				Title: "Test Title, Which is Made !WAY! Too long intentionally to test the slug",
+				Date:  date,
+				Html:  data.Html,
+			}
 
-		for i, want := range []db.Comment{
-			{
-				ExtCommentId: "123",
-				PageId:       page.Id,
-				UserName:     "user1",
-				Content:      "Test comment 1",
-				Indent:       0,
-				Reply:        100,
-				CommentedAt:  "2025-01-02T03:04:05",
-			},
-			{
-				ExtCommentId: "456",
-				PageId:       page.Id,
-				UserName:     "user2",
-				Content:      "Test comment 2",
-				Indent:       1,
-				Reply:        50,
-				CommentedAt:  "2024-05-19T04:06:08",
-			},
-		} {
-			require.Equal(t, want.ExtCommentId, resultComments[i].ExtCommentId)
-			require.Equal(t, want.PageId, resultComments[i].PageId)
-			require.Equal(t, want.UserName, resultComments[i].UserName)
-			require.Equal(t, want.Content, resultComments[i].Content)
-			require.Equal(t, want.Indent, resultComments[i].Indent)
-			require.Equal(t, want.Reply, resultComments[i].Reply)
-			require.Equal(t, want.CommentedAt, resultComments[i].CommentedAt)
+			pr.Insert(page)
+			err := scrapeHtml.scrapePages(date)
+			require.NoError(t, err)
+
+			resultPage := pr.FindByDate(date)[0]
+			resultComments := cr.FindByPageId(page.Id)
+
+			require.Equal(t, "test_title_which_is_made_way_too_long", resultPage.Slug)
+
+			require.Equal(t, len(data.WantComments), len(resultComments))
+
+			for i, want := range data.WantComments {
+				require.Equal(t, want.ExtCommentId, resultComments[i].ExtCommentId)
+				require.Equal(t, page.Id, resultComments[i].PageId)
+				require.Equal(t, want.UserName, resultComments[i].UserName)
+				require.Equal(t, want.Content, resultComments[i].Content)
+				require.Equal(t, want.Indent, resultComments[i].Indent)
+				require.Equal(t, want.Reply, resultComments[i].Reply)
+				require.Equal(t, want.CommentedAt, resultComments[i].CommentedAt)
+			}
+
+			// run scrape pages again and see comments don't duplicate
+			err = scrapeHtml.scrapePages(date)
+			require.NoError(t, err)
+
+			resultCommentsOnSecondRun := cr.FindByPageId(page.Id)
+
+			require.Equal(t, len(data.WantComments), len(resultCommentsOnSecondRun))
 		}
 	})
+
 	t.Run("scrapePages insert only new comments", func(t *testing.T) {
-		// run scrape pages again
-		err := scrapeHtml.scrapePages(date)
-		require.NoError(t, err)
-
-		resultComments := cr.FindByPageId(page.Id)
-
-		require.Equal(t, 2, len(resultComments))
 	})
-
 }
 
 // Test pruning of comments

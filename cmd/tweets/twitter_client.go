@@ -12,7 +12,7 @@ type Poster interface {
 }
 
 type TwitterClient struct {
-	kvr *db.KvRepository
+	kvr         *db.KvRepository
 	accessToken string
 }
 
@@ -49,7 +49,6 @@ func (tc *TwitterClient) getAccessToken() (string, error) {
 
 	// call refresh token endpoint
 	res, err := external.RefreshToken(oldRefreshToken)
-
 
 	if err != nil {
 		slog.Error("error on refreshing token", "err", err)

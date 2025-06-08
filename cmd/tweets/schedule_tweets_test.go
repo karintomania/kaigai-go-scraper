@@ -28,10 +28,10 @@ func TestScheduleTweets(t *testing.T) {
 	scheduledDateMax := "2025-10-14"
 
 	page := db.Page{
-		Slug:  "test_slug",
-		Title: "Test Title",
+		Slug:            "test_slug",
+		Title:           "Test Title",
 		TranslatedTitle: "テストタイトル",
-		Date:  tweetDate,
+		Date:            tweetDate,
 	}
 
 	pr.Insert(&page)

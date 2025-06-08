@@ -230,7 +230,6 @@ func (tp *TranslatePage) translateCommentChunk(title string, comments []db.Comme
 
 	prompt := fmt.Sprintf(PROMPT_COMMENT, title, string(jsonComments))
 
-
 	answer, err := tp.callAi(prompt)
 	if err != nil {
 		return nil, err
