@@ -11,3 +11,9 @@ test:
 fmt:
 	go fmt ./...
 	golangci-lint run
+
+server:
+	./kaigai-go-scraper -mode server
+
+scrape:
+	./kaigai-go-scraper -run-all
